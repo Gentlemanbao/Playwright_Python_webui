@@ -1,0 +1,11 @@
+uat_pw: gAAAAABnPAN_-EUgV3B-1e7rcqPLbLhqRuqDH-Bcs6LRZzo4R6Sl58bzvHVmZ8DU6GK3hr0LyUvu_7vVBpfYq4hIz2GPZx-0fA==
+key: cT17CVJkdkFqT32H74Qk_ly-xEe3DXRZkxRWEx7pjG4=
+uat_host: 192.168.10.136
+uat_username: root
+uat_port: 3306
+uat_databasename: mgmt_data
+test_pw: gAAAAABnPAN_-EUgV3B-1e7rcqPLbLhqRuqDH-Bcs6LRZzo4R6Sl58bzvHVmZ8DU6GK3hr0LyUvu_7vVBpfYq4hIz2GPZx-0fA==
+test_host: 192.168.10.139
+test_username: root
+test_port: 3306
+test_databasename: mgmt_data

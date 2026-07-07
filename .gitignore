@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.pxd
+*.pyx
+*.pyxbld
+*.pyd
+*.pxd
+*.pyx
+*.pyxbld
+*.pyd
+
+# Virtual environments
+venv/
+ENV/
+env/
+.virtualenv/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Test reports
+.report/
+temp/
+.pytest_cache/
+
+# Screenshots
+picture/screenshots/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python egg
+*.egg-info/
+.installed.cfg
+
+# Build artifacts
+dist/
+build/
+*.egg
+
+# Database
+*.db
+*.sqlite
+
+# Configuration files with secrets
+config/qx_environment.yml
+
+# Keep example configuration files
+!config/qx_environment.yml.example
