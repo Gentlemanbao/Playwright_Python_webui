@@ -1,1 +1,10 @@
 
+username: yunwei2
+password: gAAAAABqIO1PUwd8bkiGth8S7OL64NlHnD7946XPJxBuwxPhiBI3grntTMvqOiyG3NXwtm-HO5qwytca6srhgEQuha5kW8reuw==
+key: cT17CVJkdkFqT32H74Qk_ly-xEe3DXRZkxRWEx7pjG4=
+test: 192.168.10.137
+uat: 192.168.10.134
+product: 192.168.100.31
+base_url_test: http://192.168.10.138:9114
+base_url_uat: http://192.168.10.135:9114
+base_url_product: http://192.168.100.33:9114
