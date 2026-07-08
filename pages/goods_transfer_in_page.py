@@ -9,6 +9,7 @@ FilePath: goods_transfer_in_page.py
 import time
 from utils.log_print import get_logger
 from utils.save_screenshot import save_screenshot
+from pages.public_operation import repetitive_operation
 
 
 class GoodsTransferInPage:
@@ -26,7 +27,7 @@ class GoodsTransferInPage:
         self.varietyid = page.locator("[id='varietyId']")
         self.categoryid = page.locator("[id='categoryId']")
         self.inputweight = page.locator("[id='inputWeight']")
-        self.inputnum = page.locator("[id='inputNum']")
+        self.inputnum = page.locator("//input[@id='inputNum' and (@value='0')]")
         self.queding = page.get_by_role("button", name="确 定")
         self.tijiao = page.locator("xpath=//span[text()='确 定']")
 
@@ -37,26 +38,20 @@ class GoodsTransferInPage:
         self.add_transfer_in_button.click()
         self.putstorageway.click()
         self.warehouseaddressid.click()
-        self.warehouseaddressid.fill("江苏银海农佳乐仓储有限公司")
-        self.page.keyboard.press('Enter')
+        repetitive_operation(self.page, self.warehouseaddressid, "江苏银海农佳乐仓储有限公司")
         self.add.click()
-        self.customerid.click()
-        self.customerid.fill("北大方正物产集团有限公司")
-        self.page.keyboard.press('Enter')
         self.confirmdate.click()
         self.page.locator("text=今天").click()
         self.varietyid.click()
-        self.varietyid.fill("硅铁")
-        self.page.keyboard.press('Enter')
+        repetitive_operation(self.page, self.varietyid, "硅铁")
         self.categoryid.click()
         self.page.keyboard.press('ArrowDown')
         self.page.keyboard.press('Enter')
-        self.inputweight.click()
-        self.inputweight.fill("189")
-        self.inputnum.click()
-        self.page.keyboard.press('Backspace')
-        self.inputnum.fill("100")
-        self.page.keyboard.press('Enter')
-        self.queding.click()
+        repetitive_operation(self.page, self.inputweight, "189")
+        repetitive_operation(self.page, self.inputnum, "100")
+        repetitive_operation(self.page, self.customerid, "北大方正物产集团有限公司", is_click=True)
+        locator = self.page.locator("xpath=//span[text()='确 定']")
+        print(locator.count())
+        locator.nth(1).click()
         self.tijiao.click()
         

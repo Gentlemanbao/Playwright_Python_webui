@@ -13,7 +13,7 @@ from utils.case_pretask import pre_task
 
 # 按装订区域中的绿色按钮以运行脚本。
 if __name__ == '__main__':
-    run_edit("test")
+    run_edit("test") 
     pre_task()
     os.system("pytest --alluredir ./temp")
     # os.system("pytest -n=3 --dist=loadfile --alluredir ./temp")
