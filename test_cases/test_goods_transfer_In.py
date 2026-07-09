@@ -19,4 +19,5 @@ def test_add_transfer_in(page, host):
     goods_transfer_in_page.add_transfer_in()
     expect(page.locator("text=江苏银海农佳乐仓储有限公司: 硅铁 * 189")).to_be_visible(timeout=3000)
     save_screenshot(page, "入库指令创建测试用例执行完成")
+
     

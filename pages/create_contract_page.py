@@ -22,6 +22,15 @@ class CreateContractPage:
         self.iscancel = page.locator("[id='isCancel']")
         self.department_leader_user_account = page.locator("[id='departmentLeaderUserAccount']")
         self.business_assistant = page.locator("[id='businessAssistant']")
+        self.paymentorder = page.locator("[id='paymentOrder']")
+        self.deliverystartdate = page.locator("[id='deliveryStartDate']")
+        self.deliveryenddate = page.locator("[id='deliveryEndDate']")
+        self.deliverymethod = page.locator("[id='deliveryMethod']")
+        self.forwardername = page.locator("[id='forwarderName']")
+        self.warehousefeeby = page.locator("[id='warehouseFeeBy']")
+        self.transferfeebear = page.locator("[id='transferFeeBear']")
+        self.deliveryfeebear = page.locator("[id='deliveryFeeBear']")
+        self.latestpickupdate = page.locator("[id='latestPickupDate']")
 
     
 
@@ -44,4 +53,25 @@ class CreateContractPage:
         repetitive_operation(self.page, self.varityid, "硅铁")
         repetitive_operation(self.page, self.userid, "许泽源")
         repetitive_operation(self.page, self.person, "匡毓岚")
+
+    def delivery_information(self):
         
+        """
+        合同簿记-交付信息操作方法
+        """
+        repetitive_operation(self.page, self.paymentorder, "先货后款")
+        repetitive_operation(self.page, self.deliverystartdate, "2026-07-01")
+        repetitive_operation(self.page, self.deliveryenddate, "2026-07-09")
+        repetitive_operation(self.page, self.deliverymethod, "货转")
+        repetitive_operation(self.page, self.forwardername, "测试公司")
+        repetitive_operation(self.page, self.warehousefeeby, "德睿承担")
+        repetitive_operation(self.page, self.transferfeebear, "德睿承担")
+        repetitive_operation(self.page, self.deliveryfeebear, "德睿承担")
+        repetitive_operation(self.page, self.latestpickupdate, "2026-07-09")
+    
+    def create_contract(self):
+        """
+        新增合同
+        """
+        self.basic_information()
+        self.delivery_information()

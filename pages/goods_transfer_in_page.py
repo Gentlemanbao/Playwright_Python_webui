@@ -1,3 +1,10 @@
+'''
+Author: 章豹
+Date: 2026-07-07 13:10:41
+LastEditors: Do not edit
+LastEditTime: 2026-07-09 16:31:45
+FilePath: \ui_auto_project\pages\goods_transfer_in_page.py
+'''
 """
 Author: 章豹
 Date: 2026-07-07 13:10:41
@@ -32,6 +39,9 @@ class GoodsTransferInPage:
         self.tijiao = page.locator("xpath=//span[text()='确 定']")
 
     def add_transfer_in(self):
+        """
+        新增入库指令
+        """
         self.operation_menu.click()
         self.cargo_execution_menu.click()
         self.transfer_in_menu.click()
