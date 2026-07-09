@@ -1,3 +1,9 @@
+"""
+Author: 章豹
+Description: 新增合同测试用例
+Date: 2026/7/6 17:30
+LastEditTime: 2026/7/6 17:30
+"""
 from playwright.sync_api import expect
 from playwright.sync_api._generated import Page
 from pages.login_page import LoginPage

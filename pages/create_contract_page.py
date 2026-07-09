@@ -1,3 +1,9 @@
+"""
+Author: 章豹
+Description: 新增合同页面操作方法
+Date: 2026/7/6 17:30
+LastEditTime: 2026/7/6 17:30
+"""
 import time
 from pages.public_operation import repetitive_operation
 from utils.log_print import get_logger

@@ -1,3 +1,9 @@
+"""
+Author: 章豹
+Description: 公共操作方法
+Date: 2026/7/6 17:30
+LastEditTime: 2026/7/6 17:30
+"""
 import time
 
 
