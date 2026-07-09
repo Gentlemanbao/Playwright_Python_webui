@@ -1,10 +1,3 @@
-'''
-Author: 章豹
-Date: 2026-07-07 13:10:41
-LastEditors: Do not edit
-LastEditTime: 2026-07-09 16:31:45
-FilePath: \ui_auto_project\pages\goods_transfer_in_page.py
-'''
 """
 Author: 章豹
 Date: 2026-07-07 13:10:41
