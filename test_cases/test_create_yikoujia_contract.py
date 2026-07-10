@@ -18,3 +18,5 @@ def test_add_contract(page, host):
     login_page.login(host=host)
     create_contract_page = CreateContractPage(page)
     create_contract_page.create_contract()
+    save_screenshot(page, "create_contract.png")
+   

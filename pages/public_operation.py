@@ -17,4 +17,4 @@ def repetitive_operation(page, page_obj, input_text=None, is_click=False):
             page_obj.click()
         page_obj.fill(input_text)
         page.keyboard.press('Enter')
-        # time.sleep(1)
+        time.sleep(1)
