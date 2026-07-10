@@ -18,5 +18,7 @@ def test_add_contract(page, host):
     login_page.login(host=host)
     create_contract_page = CreateContractPage(page)
     create_contract_page.create_contract()
+    locator = page.locator("#logicContractCode")
+    expect(locator).not_to_have_value("")
     save_screenshot(page, "create_contract.png")
    

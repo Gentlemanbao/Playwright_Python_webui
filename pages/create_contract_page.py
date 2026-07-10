@@ -5,7 +5,7 @@ Date: 2026/7/6 17:30
 LastEditTime: 2026/7/6 17:30
 """
 import time
-from pages.public_operation import repetitive_operation
+from pages.public_operation import repetitive_operation, get_row_cell_by_header, fill_cell
 from utils.log_print import get_logger
 from utils.save_screenshot import save_screenshot
 
@@ -52,7 +52,20 @@ class CreateContractPage:
         self.estimatedamountratio = page.locator("[id='estimatedAmountRatio']")
         self.estimatedamountratiostartdate = page.locator("[id='estimatedAmountRatioStartDate']")
         self.estimatedamountratioenddate = page.locator("[id='estimatedAmountRatioEndDate']")
-
+        #  物资明细元素
+        self.add_goods_button = page.locator("text=新增物资明细")
+        self.warehouse_name = page.locator("input[role='combobox']")
+        self.numbers = page.locator("input[role='spinbutton']")
+        self.category_name = page.locator("input[role='combobox']")
+        self.weight = page.locator("input[role='spinbutton']")
+        self.on_call_price = page.locator("input[role='spinbutton']")
+        self.basis = page.locator("input[role='spinbutton']")
+        self.premiums_and_discounts = page.locator("input[role='spinbutton']")
+        self.date_of_manufacture = page.locator("[placeholder='请选择日期']")
+        self.warehouse_free_period_start = page.locator("[placeholder='请选择日期']")
+        # 报错 & 提交
+        self.baocun = page.locator("text=保 存")
+        self.tijiao = page.locator("text=提交审批")
     
 
     def basic_information(self):
@@ -80,8 +93,8 @@ class CreateContractPage:
         合同簿记-交付信息操作方法
         """
         repetitive_operation(self.page, self.paymentorder, "先货后款")
-        repetitive_operation(self.page, self.deliverystartdate, "2026-07-01", is_click=True)
-        repetitive_operation(self.page, self.deliveryenddate, "2026-07-09", is_click=True)
+        repetitive_operation(self.page, self.deliverystartdate, "2026-06-01", is_click=True)
+        repetitive_operation(self.page, self.deliveryenddate, "2026-06-09", is_click=True)
         repetitive_operation(self.page, self.deliverymethod, "货转", is_click=True)
         repetitive_operation(self.page, self.forwardername, "测试公司", is_click=True)
         repetitive_operation(self.page, self.warehousefeeby, "德睿承担")
@@ -112,6 +125,31 @@ class CreateContractPage:
         repetitive_operation(self.page, self.estimatedamountratiostartdate, "2026-07-01", is_click=True)
         repetitive_operation(self.page, self.estimatedamountratioenddate, "2026-07-10", is_click=True)
     
+    def goods_information(self):
+        """
+        合同簿记-物资信息操作方法
+        """
+        self.add_goods_button.click()
+        new_row = self.page.locator("table tbody tr:last-child") #  定位新增行
+        warehouse_name = get_row_cell_by_header(self.page, new_row, "仓库名")
+        fill_cell(self.page, warehouse_name, "上海象屿钢铁供应链有限公司（上海象屿钢铁宝山库）",field_type='combobox')
+        numbers = get_row_cell_by_header(self.page, new_row, "件数")
+        fill_cell(self.page, numbers, "100",field_type='spinbutton')
+        category_name = get_row_cell_by_header(self.page, new_row, "品名*")
+        fill_cell(self.page, category_name, "硅铁",field_type='combobox')
+        weight = get_row_cell_by_header(self.page, new_row, "总重量 *")
+        fill_cell(self.page, weight, "100",field_type='spinbutton')
+        on_call_price = get_row_cell_by_header(self.page, new_row, "点价成交价*")
+        fill_cell(self.page, on_call_price, "10",field_type='spinbutton')
+        basis = get_row_cell_by_header(self.page, new_row, "基差 *")
+        fill_cell(self.page, basis, "0",field_type='spinbutton')
+        premiums_and_discounts = get_row_cell_by_header(self.page, new_row, "升贴水 *")
+        fill_cell(self.page, premiums_and_discounts, "0",field_type='spinbutton')
+        date_of_manufacture = get_row_cell_by_header(self.page, new_row, "生产日期")
+        fill_cell(self.page, date_of_manufacture, "2026-07-10",field_type='datepicker')
+        warehouse_free_period_start = get_row_cell_by_header(self.page, new_row, "仓储费起始日")
+        fill_cell(self.page, warehouse_free_period_start, "today",field_type='datepicker')
+
     def create_contract(self):
         """
         新增合同
@@ -119,3 +157,5 @@ class CreateContractPage:
         self.basic_information()
         self.delivery_information()
         self.payment_information()
+        self.goods_information()
+        self.baocun.click()
