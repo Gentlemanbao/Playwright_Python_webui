@@ -13,6 +13,7 @@ from utils.save_screenshot import save_screenshot
 class CreateContractPage:
     def __init__(self, page):
         self.page = page
+        #  基础信息元素
         self.contract_management_menu = page.locator("text=合同管理")
         self.contract_bookkeeping_menu = page.locator("text=合同簿记")
         self.transaction_type = page.get_by_role("combobox")
@@ -28,6 +29,7 @@ class CreateContractPage:
         self.iscancel = page.locator("[id='isCancel']")
         self.department_leader_user_account = page.locator("[id='departmentLeaderUserAccount']")
         self.business_assistant = page.locator("[id='businessAssistant']")
+        #  交付信息元素
         self.paymentorder = page.locator("[id='paymentOrder']")
         self.deliverystartdate = page.locator("[id='deliveryStartDate']")
         self.deliveryenddate = page.locator("[id='deliveryEndDate']")
@@ -37,6 +39,19 @@ class CreateContractPage:
         self.transferfeebear = page.locator("[id='transferFeeBear']")
         self.deliveryfeebear = page.locator("[id='deliveryFeeBear']")
         self.latestpickupdate = page.locator("[id='latestPickupDate']")
+        #  付款信息元素
+        self.paymentmethod = page.locator("[id='paymentMethod']")
+        self.invoicereceiptstartdate = page.locator("[id='invoiceReceiptStartDate']")
+        self.invoicereceiptenddate = page.locator("[id='invoiceReceiptEndDate']")
+        self.invoicemoneyratio = page.locator("[id='invoiceMoneyRatio']")
+        self.invoicemoneyratiostartdate = page.locator("[id='invoiceMoneyRatioStartDate']")
+        self.invoicemoneyratioenddate = page.locator("[id='invoiceMoneyRatioEndDate']")
+        self.checkratio = page.locator("[id='checkRatio']")
+        self.checkratiostartdate = page.locator("[id='checkRatioStartDate']")
+        self.checkratioenddate = page.locator("[id='checkRatioEndDate']")
+        self.estimatedamountratio = page.locator("[id='estimatedAmountRatio']")
+        self.estimatedamountratiostartdate = page.locator("[id='estimatedAmountRatioStartDate']")
+        self.estimatedamountratioenddate = page.locator("[id='estimatedAmountRatioEndDate']")
 
     
 
@@ -61,19 +76,41 @@ class CreateContractPage:
         repetitive_operation(self.page, self.person, "匡毓岚")
 
     def delivery_information(self):
-        
         """
         合同簿记-交付信息操作方法
         """
         repetitive_operation(self.page, self.paymentorder, "先货后款")
-        repetitive_operation(self.page, self.deliverystartdate, "2026-07-01")
-        repetitive_operation(self.page, self.deliveryenddate, "2026-07-09")
-        repetitive_operation(self.page, self.deliverymethod, "货转")
-        repetitive_operation(self.page, self.forwardername, "测试公司")
+        repetitive_operation(self.page, self.deliverystartdate, "2026-07-01", is_click=True)
+        repetitive_operation(self.page, self.deliveryenddate, "2026-07-09", is_click=True)
+        repetitive_operation(self.page, self.deliverymethod, "货转", is_click=True)
+        repetitive_operation(self.page, self.forwardername, "测试公司", is_click=True)
         repetitive_operation(self.page, self.warehousefeeby, "德睿承担")
         repetitive_operation(self.page, self.transferfeebear, "德睿承担")
         repetitive_operation(self.page, self.deliveryfeebear, "德睿承担")
-        repetitive_operation(self.page, self.latestpickupdate, "2026-07-09")
+        repetitive_operation(self.page, self.latestpickupdate, "2026-07-09", is_click=True)
+    
+    def pricing_information(self):
+        """
+        合同簿记-点价信息操作方法
+        """
+        pass
+
+    def payment_information(self):
+        """
+        合同簿记-付款信息操作方法
+        """
+        repetitive_operation(self.page, self.paymentmethod, "现汇", is_click=True)
+        repetitive_operation(self.page, self.invoicereceiptstartdate, "2026-07-01", is_click=True)
+        repetitive_operation(self.page, self.invoicereceiptenddate, "2026-07-10", is_click=True)
+        repetitive_operation(self.page, self.invoicemoneyratio, "0", is_click=True)
+        repetitive_operation(self.page, self.invoicemoneyratiostartdate, "2026-07-01", is_click=True)
+        repetitive_operation(self.page, self.invoicemoneyratioenddate, "2026-07-10", is_click=True)
+        repetitive_operation(self.page, self.checkratio, "0", is_click=True)
+        repetitive_operation(self.page, self.checkratiostartdate, "2026-07-01", is_click=True)
+        repetitive_operation(self.page, self.checkratioenddate, "2026-07-10", is_click=True)
+        repetitive_operation(self.page, self.estimatedamountratio, "100", is_click=True)
+        repetitive_operation(self.page, self.estimatedamountratiostartdate, "2026-07-01", is_click=True)
+        repetitive_operation(self.page, self.estimatedamountratioenddate, "2026-07-10", is_click=True)
     
     def create_contract(self):
         """
@@ -81,3 +118,4 @@ class CreateContractPage:
         """
         self.basic_information()
         self.delivery_information()
+        self.payment_information()
