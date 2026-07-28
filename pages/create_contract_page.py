@@ -29,6 +29,7 @@ class CreateContractPage:
         self.iscancel = page.locator("[id='isCancel']")
         self.department_leader_user_account = page.locator("[id='departmentLeaderUserAccount']")
         self.business_assistant = page.locator("[id='businessAssistant']")
+        self.isrecording = page.locator("[id='isRecording']")
         #  交付信息元素
         self.paymentorder = page.locator("[id='paymentOrder']")
         self.deliverystartdate = page.locator("[id='deliveryStartDate']")
@@ -87,6 +88,7 @@ class CreateContractPage:
         repetitive_operation(self.page, self.varityid, "硅铁")
         repetitive_operation(self.page, self.userid, "许泽源")
         repetitive_operation(self.page, self.person, "匡毓岚")
+        repetitive_operation(self.page, self.isrecording, "是")
 
     def delivery_information(self):
         """
