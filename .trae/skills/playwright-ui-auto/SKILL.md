@@ -40,33 +40,46 @@ ui_auto_project/
 └── .trae/skills/              # Skill定义目录
 ```
 
-## 2. Page Object 编写规范
+## 2. 硬性要求：文件头部注释（必须遵守）
 
-### 2.1 文件头部注释
+### ⚠️ 强制规则
+**每次使用 Write 工具创建新文件时，必须在文件开头添加以下头部注释，缺一不可！**
+
+### 2.1 头部注释模板
 
 ```python
 # -*- coding: utf-8 -*-
 """
-@Time ： 当前时间
+@Time ： {datetime.now().strftime("%Y/%m/%d %H:%M")}
 @Auth ： 章豹
-@File ：文件名.py
+@File ：{文件名}
 @IDE ：PyCharm
-@LastEditTime ： 当前时间
+@LastEditTime ： {datetime.now().strftime("%Y/%m/%d %H:%M")}
 """
 ```
 
-### 2.2 类结构模板
+### 2.2 生成规则
+- `@Time` 和 `@LastEditTime`：使用当前系统时间，格式 `YYYY/MM/DD HH:MM`
+- `@Auth`：固定为 `章豹`
+- `@File`：实际文件名，如 `user_page.py`、`test_create_user.py`
+- `@IDE`：固定为 `PyCharm`
 
+### 2.3 示例
+创建 `pages/approval_page.py` 时，文件开头必须是：
 ```python
 # -*- coding: utf-8 -*-
 """
-@Time ： YYYY/MM/DD HH:MM
+@Time ： 2026/7/29 15:30
 @Auth ： 章豹
-@File ：page_name.py
+@File ：approval_page.py
 @IDE ：PyCharm
-@LastEditTime ： YYYY/MM/DD HH:MM
+@LastEditTime ： 2026/7/29 15:30
 """
+```
 
+## 3. Page Object 类结构模板
+
+```python
 import time
 from utils.log_print import get_logger
 from utils.save_screenshot import save_screenshot
@@ -107,7 +120,7 @@ class PageNamePage:
         save_screenshot(self.page, "提交后")
 ```
 
-### 2.3 元素定位规范
+### 3.1 元素定位规范
 
 **优先使用以下定位方式（按优先级排序）：**
 
@@ -131,7 +144,7 @@ class PageNamePage:
    self.combobox = page.get_by_role("combobox")
    ```
 
-### 2.4 公共操作方法
+### 3.2 公共操作方法
 
 #### repetitive_operation() - 下拉框/选择框操作
 
@@ -179,7 +192,7 @@ new_row = page.locator("table tbody tr:last-child")
 cell = get_row_cell_by_header(page, new_row, "列头名称")
 ```
 
-### 2.5 截图规范
+### 3.3 截图规范
 
 ```python
 from utils.save_screenshot import save_screenshot
@@ -193,16 +206,16 @@ self.submit_button.click()
 save_screenshot(page, "操作后")
 ```
 
-## 3. 测试用例编写规范
+## 4. 测试用例编写规范
 
-### 3.1 文件命名规则
+### 4.1 文件命名规则
 
 ```
 test_<功能模块名称>.py
 示例：test_create_contract.py, test_goods_transfer.py
 ```
 
-### 3.2 测试类结构模板
+### 4.2 测试类结构模板
 
 ```python
 # -*- coding: utf-8 -*-
@@ -244,7 +257,7 @@ def test_module_function(page, host):
     expect(page.locator("text=操作成功")).to_be_visible(timeout=5000)
 ```
 
-### 3.3 测试用例编写原则
+### 4.3 测试用例编写原则
 
 1. **每个测试用例只测试一个功能点**
 2. **使用 `page` 和 `host` fixture**（由 conftest.py 提供）
@@ -260,7 +273,7 @@ def test_module_function(page, host):
 4. **关键步骤添加截图**
 5. **添加中文注释说明测试意图**
 
-### 3.4 可用的 pytest fixture
+### 4.4 可用的 pytest fixture
 
 | Fixture | 作用域 | 说明 |
 |---------|--------|------|
@@ -268,11 +281,11 @@ def test_module_function(page, host):
 | `host` | function | 执行环境（test/uat/dev） |
 | `browser` | session | 整个会话共用的浏览器实例 |
 
-## 4. 代码生成流程
+## 5. 代码生成流程
 
 当用户描述业务需求时，按以下流程生成代码：
 
-### 4.1 需求分析
+### 5.1 需求分析
 
 从用户描述中提取：
 - **功能模块名称**：如"合同管理"、"入库指令"
@@ -280,31 +293,34 @@ def test_module_function(page, host):
 - **表单字段**：如"客户名称"、"品种"、"数量"
 - **预期结果**：如"保存成功提示"、"列表中出现新记录"
 
-### 4.2 生成 Page Object
+### 5.2 生成 Page Object
 
 1. 根据功能模块命名：`<module_name>_page.py`
-2. 提取页面元素定位器（根据用户描述的UI元素）
-3. 封装业务操作方法
-4. 使用项目公共方法（repetitive_operation、fill_cell等）
+2. **强制添加头部注释**（见第2节）
+3. 提取页面元素定位器（根据用户描述的UI元素）
+4. 封装业务操作方法
+5. 使用项目公共方法（repetitive_operation、fill_cell等）
 
-### 4.3 生成测试用例
+### 5.3 生成测试用例
 
 1. 命名为 `test_<module_name>.py`
-2. 导入 LoginPage 和新创建的 Page Object
-3. 编写测试步骤：登录→页面导航→操作→断言
-4. 添加截图和日志
+2. **强制添加头部注释**（见第2节）
+3. 导入 LoginPage 和新创建的 Page Object
+4. 编写测试步骤：登录→页面导航→操作→断言
+5. 添加截图和日志
 
-### 4.4 验证代码
+### 5.4 验证代码
 
 生成代码后，确保：
-- 符合项目代码规范
-- 使用项目现有的公共方法和工具类
-- 包含必要的断言和截图
-- 文件命名和路径正确
+- ✅ 已添加文件头部注释
+- ✅ 符合项目代码规范
+- ✅ 使用项目现有的公共方法和工具类
+- ✅ 包含必要的断言和截图
+- ✅ 文件命名和路径正确
 
-## 5. 常见场景示例
+## 6. 常见场景示例
 
-### 5.1 新增功能场景
+### 6.1 新增功能场景
 
 ```python
 # pages/new_feature_page.py
@@ -329,7 +345,7 @@ def test_create_new_feature(page, host):
     expect(page.locator("text=保存成功")).to_be_visible(timeout=5000)
 ```
 
-### 5.2 查询功能场景
+### 6.2 查询功能场景
 
 ```python
 # pages/search_page.py
@@ -356,7 +372,7 @@ def test_search_feature(page, host):
     assert search_page.get_result_count() > 0, "搜索结果为空"
 ```
 
-### 5.3 审批流程场景
+### 6.3 审批流程场景
 
 ```python
 # pages/approval_page.py
@@ -384,7 +400,7 @@ def test_approve_flow(page, host):
     expect(page.locator("text=审批完成")).to_be_visible(timeout=5000)
 ```
 
-## 6. 注意事项
+## 7. 注意事项
 
 1. **Ant Design 组件处理**：项目使用 Ant Design UI 框架，下拉框、日期选择器等组件有特殊的定位方式，优先使用 `public_operation.py` 中的公共方法
 
@@ -398,7 +414,7 @@ def test_approve_flow(page, host):
 
 6. **代码复用**：相同的操作模式（如表单填写、表格操作）尽量复用公共方法
 
-## 7. 生成代码 Checklist
+## 8. 生成代码 Checklist
 
 生成代码后，智能体必须检查以下项目：
 

@@ -41,7 +41,7 @@ class LoginPage:
         else:
             host = ReadConfig(self.file_path[0] + url_path).read_data('dev')
         logger.info(f"当前环境为{host}")
-        url = f'http://{host}/user/login/'
+        url = f"http://{host}/user/login/"
         logger.info(f"当前登录URL为{url}")
         self.page.goto(url)
         self.username_input.fill(username)

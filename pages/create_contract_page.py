@@ -8,6 +8,8 @@ import time
 from pages.public_operation import repetitive_operation, get_row_cell_by_header, fill_cell
 from utils.log_print import get_logger
 from utils.save_screenshot import save_screenshot
+from pages.approval_page import ApprovalPage
+
 
 
 class CreateContractPage:
@@ -29,6 +31,7 @@ class CreateContractPage:
         self.iscancel = page.locator("[id='isCancel']")
         self.department_leader_user_account = page.locator("[id='departmentLeaderUserAccount']")
         self.business_assistant = page.locator("[id='businessAssistant']")
+        self.isrecording = page.locator("[id='isRecording']")
         #  交付信息元素
         self.paymentorder = page.locator("[id='paymentOrder']")
         self.deliverystartdate = page.locator("[id='deliveryStartDate']")
@@ -87,6 +90,7 @@ class CreateContractPage:
         repetitive_operation(self.page, self.varityid, "硅铁")
         repetitive_operation(self.page, self.userid, "许泽源")
         repetitive_operation(self.page, self.person, "匡毓岚")
+        repetitive_operation(self.page, self.isrecording, "是")
 
     def delivery_information(self):
         """
@@ -159,3 +163,4 @@ class CreateContractPage:
         self.payment_information()
         self.goods_information()
         self.baocun.click()
+        time.sleep(2)
