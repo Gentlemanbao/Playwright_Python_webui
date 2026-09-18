@@ -1,163 +1,190 @@
+# -*- coding: utf-8 -*-
 """
-Author: 章豹
-Description: 新增合同页面操作方法
-Date: 2026/7/6 17:30
-LastEditTime: 2026/7/6 17:30
+@Time ： 2026/7/6 17:30
+@Auth ： 章豹
+@File ：create_contract_page.py
+@IDE ：PyCharm
+@LastEditTime ： 2026/9/16 17:30
 """
+import re
 import time
-from pages.public_operation import repetitive_operation, get_row_cell_by_header, fill_cell
-from utils.log_print import get_logger
-from utils.save_screenshot import save_screenshot
-from pages.approval_page import ApprovalPage
+from pages.public_operation import (
+    repetitive_operation,
+    select_dropdown_option,
+    get_vxe_table_by_header,
+    vxe_fill_cell,
+)
 
+
+def _ancestor_el_select(locator):
+    """根据 name 属性定位 input，再找最外层的 .el-select 组件（避免匹配到嵌套子 div）"""
+    return locator.first.locator("xpath=ancestor::div[contains(@class,'el-select') and not(contains(@class,'el-select__'))]")
 
 
 class CreateContractPage:
     def __init__(self, page):
         self.page = page
-        #  基础信息元素
-        self.contract_management_menu = page.locator("text=合同管理")
-        self.contract_bookkeeping_menu = page.locator("text=合同簿记")
-        self.transaction_type = page.get_by_role("combobox")
-        self.spot_or_forward = page.locator("[id='spotOrForward']")
-        self.custormerid = page.locator("[id='customerId']")
-        self.bankaccountno = page.locator("[id='bankAccountNo']")
-        self.varityid = page.locator("xpath=//input[@id='varietyId']")
-        self.userid = page.locator("[id='userUid']")
-        self.person = page.locator("[id='person']")
-        self.more_or_less_ratio = page.locator("[id='moreOrLessRatio']")
-        self.credittype = page.locator("[id='creditType']")
-        self.warehouse_receipt_standard = page.locator("[id='warehouseReceiptStandard']")
-        self.iscancel = page.locator("[id='isCancel']")
-        self.department_leader_user_account = page.locator("[id='departmentLeaderUserAccount']")
-        self.business_assistant = page.locator("[id='businessAssistant']")
-        self.isrecording = page.locator("[id='isRecording']")
-        #  交付信息元素
-        self.paymentorder = page.locator("[id='paymentOrder']")
-        self.deliverystartdate = page.locator("[id='deliveryStartDate']")
-        self.deliveryenddate = page.locator("[id='deliveryEndDate']")
-        self.deliverymethod = page.locator("[id='deliveryMethod']")
-        self.forwardername = page.locator("[id='forwarderName']")
-        self.warehousefeeby = page.locator("[id='warehouseFeeBy']")
-        self.transferfeebear = page.locator("[id='transferFeeBear']")
-        self.deliveryfeebear = page.locator("[id='deliveryFeeBear']")
-        self.latestpickupdate = page.locator("[id='latestPickupDate']")
-        #  付款信息元素
-        self.paymentmethod = page.locator("[id='paymentMethod']")
-        self.invoicereceiptstartdate = page.locator("[id='invoiceReceiptStartDate']")
-        self.invoicereceiptenddate = page.locator("[id='invoiceReceiptEndDate']")
-        self.invoicemoneyratio = page.locator("[id='invoiceMoneyRatio']")
-        self.invoicemoneyratiostartdate = page.locator("[id='invoiceMoneyRatioStartDate']")
-        self.invoicemoneyratioenddate = page.locator("[id='invoiceMoneyRatioEndDate']")
-        self.checkratio = page.locator("[id='checkRatio']")
-        self.checkratiostartdate = page.locator("[id='checkRatioStartDate']")
-        self.checkratioenddate = page.locator("[id='checkRatioEndDate']")
-        self.estimatedamountratio = page.locator("[id='estimatedAmountRatio']")
-        self.estimatedamountratiostartdate = page.locator("[id='estimatedAmountRatioStartDate']")
-        self.estimatedamountratioenddate = page.locator("[id='estimatedAmountRatioEndDate']")
-        #  物资明细元素
-        self.add_goods_button = page.locator("text=新增物资明细")
-        self.warehouse_name = page.locator("input[role='combobox']")
-        self.numbers = page.locator("input[role='spinbutton']")
-        self.category_name = page.locator("input[role='combobox']")
-        self.weight = page.locator("input[role='spinbutton']")
-        self.on_call_price = page.locator("input[role='spinbutton']")
-        self.basis = page.locator("input[role='spinbutton']")
-        self.premiums_and_discounts = page.locator("input[role='spinbutton']")
-        self.date_of_manufacture = page.locator("[placeholder='请选择日期']")
-        self.warehouse_free_period_start = page.locator("[placeholder='请选择日期']")
-        # 报错 & 提交
-        self.baocun = page.locator("text=保 存")
-        self.tijiao = page.locator("text=提交审批")
-    
+        # 菜单导航
+        self.contract_management_menu = page.locator(".vben-sub-menu:has-text('合同管理')")
+        self.contract_bookkeeping_menu = page.locator(".vben-menu-item__content:has-text('合同簿记')")
+
+        # === 基础信息 ===
+        # 交易类型下拉（页面上第一个 el-select）
+        self.transaction_type = page.locator(".el-select").first
+        # 即期/远期 下拉（Vue el-select，非 radio）
+        self.spot_or_forward = _ancestor_el_select(page.locator("[name='spotOrForward']"))
+        # 客户名称下拉
+        self.custormerid = _ancestor_el_select(page.locator("[name='customerId']"))
+        # 银行账户下拉
+        self.bankaccountno = _ancestor_el_select(page.locator("[name='bankAccountNo']"))
+        # 品种下拉
+        self.varityid = _ancestor_el_select(page.locator("[name='varietyId']"))
+        # 交易员下拉
+        self.userid = _ancestor_el_select(page.locator("[name='userUid']"))
+        # 联系人下拉
+        self.person = _ancestor_el_select(page.locator("[name='person']"))
+        # 溢短比例 text input
+        self.more_or_less_ratio = page.locator("[name='moreOrLessRatio']")
+        # 授信类型下拉
+        self.credittype = _ancestor_el_select(page.locator("[name='creditType']"))
+        # 价货顺序下拉
+        self.priceorder = _ancestor_el_select(page.locator("[name='priceOrder']"))
+        # 仓单标准下拉
+        self.warehouse_receipt_standard = _ancestor_el_select(page.locator("[name='warehouseReceiptStandard']"))
+        # 是否注销 下拉
+        self.iscancel = _ancestor_el_select(page.locator("[name='isCancel']"))
+        # 对手合同号 text input
+        self.opponentcontractcode = page.locator("[name='opponentContractCode']")
+        # 期现部负责人 下拉
+        self.department_leader_user_account = _ancestor_el_select(page.locator("[name='departmentLeaderUserAccount']"))
+        # 业务助理 下拉
+        self.business_assistant = _ancestor_el_select(page.locator("[name='businessAssistant']"))
+        # 是否补录 下拉
+        self.isrecording = _ancestor_el_select(page.locator("[name='isRecording']"))
+
+        # === 交付信息 ===
+        # 价货顺序/先货后款
+        self.paymentorder = _ancestor_el_select(page.locator("[name='paymentOrder']"))
+        self.deliverystartdate = page.locator("[name='deliveryStartDate']")
+        self.deliveryenddate = page.locator("[name='deliveryEndDate']")
+        self.deliverymethod = _ancestor_el_select(page.locator("[name='deliveryMethod']"))
+        self.forwardername = page.locator("[name='forwarderName']")
+        self.warehousefeeby = _ancestor_el_select(page.locator("[name='warehouseFeeBy']"))
+        self.transferfeebear = _ancestor_el_select(page.locator("[name='transferFeeBear']"))
+        self.deliveryfeebear = _ancestor_el_select(page.locator("[name='deliveryFeeBear']"))
+        self.latestpickupdate = page.locator("[name='latestPickupDate']")
+
+        # === 付款信息 ===
+        self.paymentmethod = _ancestor_el_select(page.locator("[name='paymentMethod']"))
+        self.invoicereceiptstartdate = page.locator("[name='invoiceReceiptStartDate']")
+        self.invoicereceiptenddate = page.locator("[name='invoiceReceiptEndDate']")
+        self.invoicemoneyratio = page.locator("[name='invoiceMoneyRatio']")
+        self.invoicemoneyratiostartdate = page.locator("[name='invoiceMoneyRatioStartDate']")
+        self.invoicemoneyratioenddate = page.locator("[name='invoiceMoneyRatioEndDate']")
+        self.checkratio = page.locator("[name='checkRatio']")
+        self.checkratiostartdate = page.locator("[name='checkRatioStartDate']")
+        self.checkratioenddate = page.locator("[name='checkRatioEndDate']")
+        self.estimatedamountratio = page.locator("[name='estimatedAmountRatio']")
+        self.estimatedamountratiostartdate = page.locator("[name='estimatedAmountRatioStartDate']")
+        self.estimatedamountratioenddate = page.locator("[name='estimatedAmountRatioEndDate']")
+
+        # === 物资明细 ===
+        self.add_goods_button = page.locator("button:has-text(' 新增物资明细 ')")
+
+        # === 保存/提交 ===
+        # 页面上同时有"本地保存"和"保存"，必须精确匹配避免命中"本地保存"
+        self.baocun = page.locator("button").filter(has_text=re.compile(r"^\s*保存\s*$"))
+        self.tijiao = page.locator("button").filter(has_text=re.compile(r"^\s*提交审批\s*$"))
 
     def basic_information(self):
-        """
-        合同簿记-基础信息操作方法
-        """
+        """合同簿记-基础信息"""
         self.contract_management_menu.click()
         self.contract_bookkeeping_menu.click()
+        # 先选交易类型，让基础信息表单出现
         repetitive_operation(self.page, self.transaction_type, "一口价采购")
+        # 等待基础信息表单渲染
+        self.page.wait_for_timeout(1000)
+        # 即期/远期 下拉
         repetitive_operation(self.page, self.spot_or_forward, "即期")
+        # 下拉选择类字段
         repetitive_operation(self.page, self.custormerid, "北大方正物产集团有限公司")
-        repetitive_operation(self.page, self.bankaccountno, "15-010210", is_click=True)
-        repetitive_operation(self.page, self.more_or_less_ratio, "0")
+        repetitive_operation(self.page, self.bankaccountno, "中国光大银行股份有限公司上海分行-35500188069094023")
+        # 数字输入
+        self.more_or_less_ratio.fill("0")
+        # 下拉
         repetitive_operation(self.page, self.credittype, "客户授信")
-        repetitive_operation(self.page, self.warehouse_receipt_standard, "非标准", is_click=True)
+        repetitive_operation(self.page, self.warehouse_receipt_standard, "非标准")
+        # 是否注销 下拉
         repetitive_operation(self.page, self.iscancel, "否")
+        # 下拉
         repetitive_operation(self.page, self.department_leader_user_account, "张晶晶")
-        repetitive_operation(self.page, self.business_assistant, "ceshizb")
         repetitive_operation(self.page, self.varityid, "硅铁")
         repetitive_operation(self.page, self.userid, "许泽源")
-        repetitive_operation(self.page, self.person, "匡毓岚")
+        repetitive_operation(self.page, self.person, "1")
+        # 业务助理 下拉（可搜索，输入关键词过滤后选择）
+        select_dropdown_option(self.page, self.business_assistant, "ceshizb", timeout=8000)
+        # 是否补录 下拉
         repetitive_operation(self.page, self.isrecording, "是")
 
     def delivery_information(self):
-        """
-        合同簿记-交付信息操作方法
-        """
+        """合同簿记-交付信息"""
         repetitive_operation(self.page, self.paymentorder, "先货后款")
         repetitive_operation(self.page, self.deliverystartdate, "2026-06-01", is_click=True)
         repetitive_operation(self.page, self.deliveryenddate, "2026-06-09", is_click=True)
-        repetitive_operation(self.page, self.deliverymethod, "货转", is_click=True)
-        repetitive_operation(self.page, self.forwardername, "测试公司", is_click=True)
+        repetitive_operation(self.page, self.deliverymethod, "货转")
+        repetitive_operation(self.page, self.forwardername, "测试公司")
         repetitive_operation(self.page, self.warehousefeeby, "德睿承担")
         repetitive_operation(self.page, self.transferfeebear, "德睿承担")
         repetitive_operation(self.page, self.deliveryfeebear, "德睿承担")
         repetitive_operation(self.page, self.latestpickupdate, "2026-07-09", is_click=True)
-    
+
     def pricing_information(self):
-        """
-        合同簿记-点价信息操作方法
-        """
+        """合同簿记-点价信息"""
         pass
 
     def payment_information(self):
-        """
-        合同簿记-付款信息操作方法
-        """
-        repetitive_operation(self.page, self.paymentmethod, "现汇", is_click=True)
+        """合同簿记-付款信息"""
+        repetitive_operation(self.page, self.paymentmethod, "现汇")
         repetitive_operation(self.page, self.invoicereceiptstartdate, "2026-07-01", is_click=True)
         repetitive_operation(self.page, self.invoicereceiptenddate, "2026-07-10", is_click=True)
-        repetitive_operation(self.page, self.invoicemoneyratio, "0", is_click=True)
+        self.invoicemoneyratio.fill("0")
         repetitive_operation(self.page, self.invoicemoneyratiostartdate, "2026-07-01", is_click=True)
         repetitive_operation(self.page, self.invoicemoneyratioenddate, "2026-07-10", is_click=True)
-        repetitive_operation(self.page, self.checkratio, "0", is_click=True)
+        self.checkratio.fill("0")
         repetitive_operation(self.page, self.checkratiostartdate, "2026-07-01", is_click=True)
         repetitive_operation(self.page, self.checkratioenddate, "2026-07-10", is_click=True)
-        repetitive_operation(self.page, self.estimatedamountratio, "100", is_click=True)
+        self.estimatedamountratio.fill("100")
         repetitive_operation(self.page, self.estimatedamountratiostartdate, "2026-07-01", is_click=True)
         repetitive_operation(self.page, self.estimatedamountratioenddate, "2026-07-10", is_click=True)
-    
+
     def goods_information(self):
-        """
-        合同簿记-物资信息操作方法
-        """
+        """合同簿记-货物信息（vxe-table，点击单元格激活编辑，列虚拟渲染）"""
         self.add_goods_button.click()
-        new_row = self.page.locator("table tbody tr:last-child") #  定位新增行
-        warehouse_name = get_row_cell_by_header(self.page, new_row, "仓库名")
-        fill_cell(self.page, warehouse_name, "上海象屿钢铁供应链有限公司（上海象屿钢铁宝山库）",field_type='combobox')
-        numbers = get_row_cell_by_header(self.page, new_row, "件数")
-        fill_cell(self.page, numbers, "100",field_type='spinbutton')
-        category_name = get_row_cell_by_header(self.page, new_row, "品名*")
-        fill_cell(self.page, category_name, "硅铁",field_type='combobox')
-        weight = get_row_cell_by_header(self.page, new_row, "总重量 *")
-        fill_cell(self.page, weight, "100",field_type='spinbutton')
-        on_call_price = get_row_cell_by_header(self.page, new_row, "点价成交价*")
-        fill_cell(self.page, on_call_price, "10",field_type='spinbutton')
-        basis = get_row_cell_by_header(self.page, new_row, "基差 *")
-        fill_cell(self.page, basis, "0",field_type='spinbutton')
-        premiums_and_discounts = get_row_cell_by_header(self.page, new_row, "升贴水 *")
-        fill_cell(self.page, premiums_and_discounts, "0",field_type='spinbutton')
-        date_of_manufacture = get_row_cell_by_header(self.page, new_row, "生产日期")
-        fill_cell(self.page, date_of_manufacture, "2026-07-10",field_type='datepicker')
-        warehouse_free_period_start = get_row_cell_by_header(self.page, new_row, "仓储费起始日")
-        fill_cell(self.page, warehouse_free_period_start, "today",field_type='datepicker')
+        self.page.wait_for_timeout(1500)
+        # 表格可能因联动重建，每次填充前都按特征列头重新定位
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "仓库名",
+                      "上海象屿钢铁供应链有限公司（上海象屿钢铁宝山库）", field_type='combobox')
+        # 选仓库后 存货地址/仓储供应商 联动加载，品名选项依赖仓库，等一会
+        self.page.wait_for_timeout(2000)
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "件数", "100", field_type='spinbutton')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "品名*", "硅铁", field_type='combobox')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "总重量 *", "100", field_type='spinbutton')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "点价成交价*", "10", field_type='spinbutton')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "基差 *", "0", field_type='spinbutton')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "升贴水 *", "0", field_type='spinbutton')
+        table = get_vxe_table_by_header(self.page)
+        vxe_fill_cell(self.page, table, "生产日期", "2026-07-10", field_type='datepicker')
+        # 注意：原代码的"仓储费起始日"列在表格中不存在（只有"仓储费截止日期"），已移除
 
     def create_contract(self):
-        """
-        新增合同
-        """
+        """新增合同"""
         self.basic_information()
         self.delivery_information()
         self.payment_information()

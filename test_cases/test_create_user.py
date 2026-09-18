@@ -7,7 +7,6 @@
 @LastEditTime ： 2026/7/28 9:40
 """
 
-import time
 import pytest
 from playwright.sync_api import expect
 from utils.save_screenshot import save_screenshot
@@ -21,7 +20,7 @@ class TestCreateUser:
     """
     
     # ==================== 正向用例 ====================
-    @pytest.mark.skip(reason="登录测试用例跳过")
+    # @pytest.mark.skip(reason="登录测试用例跳过")
     def test_create_user_with_required_fields(self, page, host):
         """
         测试场景：仅填写必填字段创建用户
@@ -67,10 +66,10 @@ class TestCreateUser:
         user_page.confirm_add_user()
         
         # 验证创建成功
-        expect(page.locator("text=用户：ok")).to_be_visible(timeout=5000)
+        expect(page.locator(".el-message--success")).to_be_visible(timeout=5000)
         save_screenshot(page, "用户创建成功")
     
-    # @pytest.mark.skip(reason="登录测试用例跳过")
+    @pytest.mark.skip(reason="登录测试用例跳过")
     def test_create_user_with_all_fields(self, page, host):
         """
         测试场景：填写所有字段创建用户
@@ -113,7 +112,7 @@ class TestCreateUser:
         user_page.create_user(**test_data)
         
         # 验证创建成功
-        expect(page.locator("text=用户：ok")).to_be_visible(timeout=5000)
+        expect(page.locator(".el-message--success")).to_be_visible(timeout=5000)
         save_screenshot(page, "用户创建成功")
 
     @pytest.mark.skip(reason="登录测试用例跳过")
@@ -147,7 +146,7 @@ class TestCreateUser:
         )
         
         # 验证创建成功
-        expect(page.locator("text=用户：ok")).to_be_visible(timeout=5000)
+        expect(page.locator(".el-message--success")).to_be_visible(timeout=5000)
         save_screenshot(page, "禁用用户创建成功")
     
     # ==================== 异常用例 ====================
@@ -183,7 +182,7 @@ class TestCreateUser:
         user_page.confirm_button.click()
         
         # 验证错误提示
-        expect(page.locator("text=请输入用户名!")).to_be_visible(timeout=5000)
+        expect(page.locator("text=请输入用户名")).to_be_visible(timeout=5000)
         save_screenshot(page, "显示用户名必填提示")
     
     @pytest.mark.skip(reason="登录测试用例跳过")

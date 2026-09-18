@@ -10,7 +10,6 @@
 import time
 from utils.log_print import get_logger
 from utils.save_screenshot import save_screenshot
-from pages.public_operation import repetitive_operation
 
 logger = get_logger()
 
@@ -23,34 +22,36 @@ class UserPage:
     
     def __init__(self, page):
         self.page = page
-        # 菜单导航元素
-        self.permission_menu = page.locator("text=权限管理")
-        self.user_tab = page.locator("xpath=//div[text()='用户']")
+        # 菜单导航元素 (Vue Vben Admin)
+        self.permission_menu = page.locator(".vben-menu-item__content:has-text('权限管理')")
+        self.user_tab = page.locator(".el-tabs__item:has-text('用户')")
         # 操作按钮
-        self.add_button = page.locator("[title='创建用户']")
-        self.search_button = page.locator("text=查 询")
-        self.reset_button = page.locator("text=重 置")
-        # 新增用户弹窗 - 必填字段
-        self.username_input = page.locator("xpath=//div/input[@id='userAccount']")
-        self.password_input = page.locator("[id='password']")
-        self.confirm_password_input = page.locator("[id='surePassWrod']")
-        self.email_input = page.locator("[id='email']")
-        self.organization_select = page.locator("[id='customerId']")
-        # 新增用户弹窗 - 非必填字段
-        self.name_input = page.locator("[id='name']")
-        self.phone_input = page.locator("[id='telephone']")
-        self.mobile_input = page.locator("[id='mobile']")
-        self.wechat_input = page.locator("[id='wechat']")
-        self.global_code_input = page.locator("[id='jdUserCode']")
-        self.department_select = page.locator("xpath=//input[@id='departmentId']")
+        self.add_button = page.locator("button:has-text('创建用户')")
+        self.search_button = page.locator("button:has-text('搜索')")
+        self.reset_button = page.locator("button:has-text('重置')")
+        # 新增用户弹窗容器 (Vue Vben Admin z-popup)
+        self.dialog = page.locator(".z-popup")
+        # 弹窗内表单字段 - 限定在弹窗内避免和表格同名冲突
+        self.username_input = self.dialog.locator("[name='userAccount']")
+        self.password_input = self.dialog.locator("[name='password']")
+        self.confirm_password_input = self.dialog.locator("[name='surePassWrod']")
+        self.email_input = self.dialog.locator("[name='email']")
+        # select 字段：定位父级 el-select 组件
+        self.customer_select = self.page.locator("[name='customerId']")
+        self.department_select = self.page.locator("[name='departmentId']")
+        self.name_input = self.dialog.locator("[name='name']")
+        self.phone_input = self.dialog.locator("[name='telephone']")
+        self.mobile_input = self.dialog.locator("[name='mobile']")
+        self.wechat_input = self.dialog.locator("[name='wechat']")
+        self.global_code_input = self.dialog.locator("[name='jdUserCode']")
         # 状态和性别单选
-        self.status_enabled = page.locator("xpath=//span[text()='启用']")
-        self.status_disabled = page.locator("xpath=//span[text()='禁用']")
-        self.gender_male = page.locator("xpath=//span[text()='男']")
-        self.gender_female = page.locator("xpath=//span[text()='女']")
-        # 确定/取消按钮
-        self.confirm_button = page.locator("text=确 定")
-        self.cancel_button = page.locator("text=取 消")
+        self.status_enabled = self.dialog.locator("label:has-text('启用')")
+        self.status_disabled = self.dialog.locator("label:has-text('禁用')")
+        self.gender_male = self.dialog.locator("label:has-text('男')")
+        self.gender_female = self.dialog.locator("label:has-text('女')")
+        # 弹窗内确定/取消按钮
+        self.confirm_button = self.dialog.locator("button:has-text('确认')")
+        self.cancel_button = self.dialog.locator("button:has-text('取消')")
         # 列表操作
         self.user_table = page.locator("table")
     
@@ -78,9 +79,19 @@ class UserPage:
         self.password_input.fill(password)
         self.confirm_password_input.fill(password)
         self.email_input.fill(email)
-        repetitive_operation(self.page, self.organization_select.nth(1), organization, is_click=True)
-        repetitive_operation(self.page, self.department_select.nth(1), department, is_click=True)
-        logger.info(f"已填写必填字段: 用户名={username}, 邮箱={email}, 机构={organization}")
+        # select 类字段：点击 el-select 父级 + fill + Enter
+        # repetitive_operation(self.page, self.customer_select.nth(1), organization, is_click=True)
+        self.customer_select.nth(1).click()
+        self.customer_select.nth(1).fill(organization)
+        self.page.keyboard.press("ArrowDown")
+        self.page.keyboard.press("Enter")
+        time.sleep(1)
+        self.department_select.nth(1).click()
+        self.department_select.nth(1).fill(department)
+        time.sleep(1)
+        self.page.keyboard.press("ArrowDown")
+        self.page.keyboard.press("Enter")
+        logger.info(f"已填写必填字段: 用户名={username}, 邮箱={email}, 机构={organization}, 部门={department}")
     
     def fill_optional_fields(self, name="", gender="male", phone="", 
                             mobile="", wechat="", global_code=""):
@@ -95,7 +106,7 @@ class UserPage:
         :param department: 部门
         """
         if name:
-            self.name_input.nth(1).fill(name)
+            self.name_input.fill(name)
         if gender == "male":
             self.gender_male.click()
         elif gender == "female":
@@ -119,6 +130,8 @@ class UserPage:
             self.status_enabled.nth(1).click()
         else:
             self.status_disabled.nth(1).click()
+        # 备用方案：使用 label 文本点击 radio
+        # self.page.locator(f"label:has-text('{'启用' if status == 'enabled' else '禁用'}')").nth(1).click()
         logger.info(f"已设置用户状态为: {status}")
     
     def confirm_add_user(self):
