@@ -7,13 +7,13 @@
 @LastEditTime ： 2026/7/6 17:30
 """
 from typing import Any, Generator
-from venv import logger
 from pathlib import Path
 import pytest
-import os
-from playwright.sync_api import Page, Browser, BrowserContext, sync_playwright
-import datetime
+from playwright.sync_api import Browser, sync_playwright
 from utils.read_yaml import ReadConfig
+from utils.log_print import get_logger
+
+logger = get_logger()
 
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent

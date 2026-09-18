@@ -1,9 +1,12 @@
+# 测试环境配置文件
+# 用户名
 username: yunwei2
+# 加密后的密码 (使用 encrypt.py 生成)
 password: gAAAAABqIO1PUwd8bkiGth8S7OL64NlHnD7946XPJxBuwxPhiBI3grntTMvqOiyG3NXwtm-HO5qwytca6srhgEQuha5kW8reuw==
+# 解密公钥
 key: cT17CVJkdkFqT32H74Qk_ly-xEe3DXRZkxRWEx7pjG4=
-test: 192.168.10.137
+# 测试环境地址
+test: 192.168.100.147
+# UAT环境地址
 uat: 192.168.10.134
 product: 192.168.100.31
-base_url_test: http://192.168.10.138:9114
-base_url_uat: http://192.168.10.135:9114
-base_url_product: http://192.168.100.33:9114
