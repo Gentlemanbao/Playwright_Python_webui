@@ -8,7 +8,10 @@ FilePath: ui_auto_project/pages/goods_transfer_in_page.py
 """
 
 import time
+from utils.log_print import get_logger
 from pages.public_operation import repetitive_operation
+
+logger = get_logger()
 
 
 class GoodsTransferInPage:
@@ -46,17 +49,21 @@ class GoodsTransferInPage:
         4. 嵌套弹窗确定 → 主弹窗保存
         """
         # ===== 第 1 步：打开主弹窗 =====
+        logger.info("入库指令: 点击菜单 货权运营 -> 货权指令执行 -> 入库指令")
         self.operation_menu.click()
         self.cargo_execution_menu.click()
         self.transfer_in_menu.click()
+        logger.info("入库指令: 点击按钮'新增'")
         self.add_transfer_in_button.click()
+        logger.info("入库指令: 选择入库方式'货物入库'单选")
         self.putstorageway.locator('span.el-radio__label').click(delay=50)
         self.page.wait_for_timeout(200)
         # 选择仓库（enabled el-select）→ 仓储供应商自动联动
-        repetitive_operation(self.page, self.warehouse_select, "江苏银海农佳乐仓储有限公司")
+        repetitive_operation(self.page, self.warehouse_select, "江苏银海农佳乐仓储有限公司", desc="仓库/港口码头")
         self.page.wait_for_timeout(500)
         # ===== 第 3 步：点新增 → 弹出嵌套弹窗 =====
         self.add_detail_btn.wait_for(state="visible", timeout=5000)
+        logger.info("入库指令: 点击弹窗内按钮'新增'打开货权明细")
         self.add_detail_btn.click(force=True)
         self.page.wait_for_timeout(800)
         # ===== 第 4 步：填写嵌套弹窗"货权明细" =====
@@ -65,8 +72,9 @@ class GoodsTransferInPage:
         customer_select = self.page.locator(
             "label:has-text('对方实体')"
         ).locator("xpath=parent::div//div[contains(@class,'el-select') and not(contains(@class,'el-select__'))]")
-        repetitive_operation(self.page, customer_select, "北大方正物产集团有限公司", is_click=True)
+        repetitive_operation(self.page, customer_select, "北大方正物产集团有限公司", is_click=True, desc="对方实体")
         # 入库日期 - el-date-editor
+        logger.info("入库指令: 入库日期(name=confirmDate) 选择'今天'")
         date_editor = self.page.locator("[name='confirmDate']").first.locator(
             "xpath=ancestor::div[contains(@class,'el-date-editor')]"
         )
@@ -85,6 +93,7 @@ class GoodsTransferInPage:
         num_input = self.page.locator("[name='inputNum']")
         repetitive_operation(self.page, num_input, "100")
         # 等待保存完成 + 弹窗关闭
+        logger.info("入库指令: 点击弹窗按钮'确认' -> '确定'")
         self.confirm_btn.click()
         self.confirm_confirm_btn.click()
         self.page.wait_for_timeout(1000)
@@ -92,5 +101,7 @@ class GoodsTransferInPage:
         # 找到页面上的"搜索"按钮（不是弹窗内的）
         search_btn = self.page.locator("button:has-text('搜索')").first
         if search_btn.count() > 0:
+            logger.info("入库指令: 点击按钮'搜索'刷新列表")
             search_btn.click(force=True)
             self.page.wait_for_timeout(2000)
+        logger.info("入库指令: 新增入库指令流程完成")

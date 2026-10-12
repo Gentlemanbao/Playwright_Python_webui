@@ -8,12 +8,15 @@
 """
 import re
 import time
+from utils.log_print import get_logger
 from pages.public_operation import (
     repetitive_operation,
     select_dropdown_option,
     get_vxe_table_by_header,
     vxe_fill_cell,
 )
+
+logger = get_logger()
 
 
 def _ancestor_el_select(locator):
@@ -98,6 +101,7 @@ class CreateContractPage:
 
     def basic_information(self):
         """合同簿记-基础信息"""
+        logger.info("基础信息: 点击菜单 合同管理 -> 合同簿记")
         self.contract_management_menu.click()
         self.contract_bookkeeping_menu.click()
         # 先选交易类型，让基础信息表单出现
@@ -111,6 +115,7 @@ class CreateContractPage:
         repetitive_operation(self.page, self.bankaccountno, "中国光大银行股份有限公司上海分行-35500188069094023")
         # 数字输入
         self.more_or_less_ratio.fill("0")
+        logger.info("基础信息: 溢短比例(name=moreOrLessRatio) 填写'0'")
         # 下拉
         repetitive_operation(self.page, self.credittype, "客户授信")
         repetitive_operation(self.page, self.warehouse_receipt_standard, "非标准")
@@ -159,6 +164,7 @@ class CreateContractPage:
 
     def goods_information(self):
         """合同簿记-货物信息（vxe-table，点击单元格激活编辑，列虚拟渲染）"""
+        logger.info("货物信息: 点击按钮'新增物资明细'")
         self.add_goods_button.click()
         self.page.wait_for_timeout(1500)
         # 表格可能因联动重建，每次填充前都按特征列头重新定位
@@ -189,5 +195,7 @@ class CreateContractPage:
         self.delivery_information()
         self.payment_information()
         self.goods_information()
+        logger.info("新增合同: 点击按钮'保存'")
         self.baocun.click()
         time.sleep(2)
+        logger.info("新增合同: 保存完成")

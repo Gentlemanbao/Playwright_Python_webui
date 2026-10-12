@@ -8,6 +8,54 @@
 """
 import time
 
+from utils.log_print import get_logger
+
+logger = get_logger()
+
+
+def _element_desc(locator, manual_desc=None):
+    """
+    从 DOM 反查元素的业务含义，用于日志定位问题：
+    manual_desc 优先（调用方明确知道字段名时传，最准）；
+    否则按 所属 .el-form-item 的 label → input 的 name → placeholder/aria-label 依次取。
+    完全识别不出时返回元素 class 前 60 字符。
+    定位失败（元素已被销毁/多匹配）返回 "(元素定位异常)"，不影响主流程。
+    """
+    if manual_desc:
+        return manual_desc
+    try:
+        return locator.evaluate(
+            """el => {
+                let input = null;
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    input = el;
+                } else if (el.querySelector) {
+                    input = el.querySelector('input, textarea');
+                }
+                const name = input ? (input.getAttribute('name') || '') : '';
+                const item = el.closest ? el.closest('.el-form-item') : null;
+                let label = '';
+                if (item) {
+                    const lb = item.querySelector('.el-form-item__label');
+                    label = lb ? (lb.textContent || '').trim() : '';
+                }
+                const parts = [];
+                if (label) parts.push(label);
+                if (name) parts.push('name=' + name);
+                if (input) {
+                    const ph = input.getAttribute('placeholder');
+                    const al = input.getAttribute('aria-label');
+                    if (!name && !label && ph) parts.push('placeholder=' + ph);
+                    else if (!name && !label && al) parts.push('aria-label=' + al);
+                }
+                if (parts.length) return parts.join('|');
+                const cls = (el.className || '').toString().trim();
+                return cls ? cls.slice(0, 60) : '(未识别元素)';
+            }"""
+        )
+    except Exception:
+        return "(元素定位异常)"
+
 
 def _el_select_selected_label(select_locator):
     """
@@ -76,7 +124,7 @@ def _el_select_own_panel(page, select_locator):
     return panel
 
 
-def select_dropdown_option(page, select_locator, text, timeout=8000):
+def select_dropdown_option(page, select_locator, text, timeout=8000, desc=None):
     """
     Element Plus el-select 通用选项选择（可靠版）
     :param page: Playwright page 对象
@@ -113,6 +161,8 @@ def select_dropdown_option(page, select_locator, text, timeout=8000):
             return { ok: false, options: cands.map(i => i.textContent.trim()) };
         }"""
 
+    desc = _element_desc(select_locator, manual_desc=desc)
+    logger.info(f"下拉选择: [{desc}] 选项='{text}'")
     last_options = []
     for attempt in range(3):
         # 打开该组件自己的下拉面板（aria-expanded 为准，多选遗留面板不影响判断）
@@ -128,7 +178,9 @@ def select_dropdown_option(page, select_locator, text, timeout=8000):
             page.wait_for_timeout(150)
         if panel is None:
             # 面板没开出来，重试
+            logger.warning(f"下拉 [{desc}] 第{attempt + 1}次尝试面板未展开，重试")
             continue
+        logger.info(f"下拉 [{desc}] 面板已展开")
 
         # 若组件内有搜索输入框（filterable），输入关键词触发过滤
         search_input = select_locator.locator(".el-select__input").first
@@ -137,6 +189,7 @@ def select_dropdown_option(page, select_locator, text, timeout=8000):
                 search_input.click(timeout=2000)
                 search_input.fill("")
                 page.keyboard.type(text, delay=80)
+                logger.info(f"下拉 [{desc}] 可搜索，已输入过滤关键词'{text}'")
             except Exception:
                 pass  # 不可搜索就按原始列表匹配
             # 等过滤/远程加载完成（列表刷新）
@@ -168,20 +221,25 @@ def select_dropdown_option(page, select_locator, text, timeout=8000):
             # 面板里确实没有该选项，重试也不会有
             last_options = result.get("options", [])
             page.keyboard.press("Escape")
+            logger.error(
+                f"下拉 [{desc}] 面板中未找到选项'{text}'，面板全部选项: {sorted(set(o for o in last_options if o))}"
+            )
             break
 
         # 选中后校验是否真的生效：JS click 可能打在 Vue 重渲染前的旧节点上而静默失效
         page.wait_for_timeout(500)
         label = _el_select_selected_label(select_locator)
         if label is None or label:
+            logger.info(f"下拉 [{desc}] 选中'{text}'成功，当前显示值'{label}'")
             return  # 无法校验（结构不存在）或已选中
+        logger.warning(f"下拉 [{desc}] 第{attempt + 1}次点击'{text}'未生效，重试")
 
     raise Exception(
         f"下拉选择 '{text}' 未生效，当前面板全部选项: {sorted(set(o for o in last_options if o))}"
     )
 
 
-def repetitive_operation(page, page_obj, input_text=None, is_click=False):
+def repetitive_operation(page, page_obj, input_text=None, is_click=False, desc=None):
     """
     重复操作方法，智能适配普通 input 和 Element Plus Select 组件
     :param page: Playwright page 对象
@@ -197,9 +255,12 @@ def repetitive_operation(page, page_obj, input_text=None, is_click=False):
     tag_name = page_obj.evaluate("el => el.tagName").lower()
     if tag_name == 'div':
         # Element Plus Select 组件：click 打开下拉 → 组件内搜索过滤 → 选选项
-        select_dropdown_option(page, page_obj, input_text, timeout=8000)
+        # （字段级日志由 select_dropdown_option 内部输出）
+        select_dropdown_option(page, page_obj, input_text, timeout=8000, desc=desc)
     else:
         # 普通 input：click → fill → Enter
+        desc = _element_desc(page_obj, manual_desc=desc)
+        logger.info(f"输入框: [{desc}] 填写'{input_text}' (先点击={is_click})")
         if is_click:
             page_obj.click(force=True)
             time.sleep(0.5)
@@ -208,6 +269,7 @@ def repetitive_operation(page, page_obj, input_text=None, is_click=False):
         page.keyboard.press("ArrowDown")
         page.keyboard.press("Enter")
         time.sleep(0.5)
+        logger.info(f"输入框: [{desc}] 填写完成")
 
 
 
@@ -288,7 +350,9 @@ def vxe_scroll_to_column(page, table, row, colid):
         )
         page.wait_for_timeout(200)
         if rendered():
+            logger.info(f"vxe表格: 横向滚动 scrollLeft={sl} 后列{colid}已渲染")
             return
+    logger.error(f"vxe表格: 横向滚动后仍未渲染出列{colid}")
     raise Exception(f"横向滚动后仍未渲染出列 {colid}")
 
 
@@ -306,7 +370,9 @@ def vxe_fill_cell(page, table, header_text, value, field_type='combobox'):
     """
     colid = get_vxe_colid(table, header_text)
     if not colid:
+        logger.error(f"vxe表格: 未找到列头'{header_text}'")
         raise Exception(f"货物明细表中未找到列: {header_text}")
+    logger.info(f"vxe表格: 列'{header_text}' colid={colid} 准备填写'{value}' (类型={field_type})")
     row = get_vxe_data_row(table)
     vxe_scroll_to_column(page, table, row, colid)
     cell = row.locator(f"td[colid='{colid}']")
@@ -317,19 +383,23 @@ def vxe_fill_cell(page, table, header_text, value, field_type='combobox'):
     if field_type == 'combobox':
         sel = cell.locator(".el-select").first
         if sel.count() == 0:
+            logger.error(f"vxe表格: 列'{header_text}'({colid}) 点击后未渲染下拉控件")
             raise Exception(f"列 '{header_text}' 点击后未渲染下拉控件")
-        select_dropdown_option(page, sel, value)
+        select_dropdown_option(page, sel, value, desc=f"vxe表格列[{header_text}]")
     elif field_type == 'spinbutton':
         inp = cell.locator("input").first
         inp.click()
         inp.fill(str(value))
         page.keyboard.press("Tab")  # 失焦提交 vxe 单元格编辑
+        logger.info(f"vxe表格: 列'{header_text}'({colid}) 填写'{value}'完成")
     elif field_type == 'datepicker':
         inp = cell.locator("input").first
         inp.click()
         inp.fill(str(value))
         page.keyboard.press("Enter")
+        logger.info(f"vxe表格: 列'{header_text}'({colid}) 填写日期'{value}'完成")
     else:
+        logger.error(f"vxe表格: 列'{header_text}' 不支持的类型{field_type}")
         raise ValueError(f"不支持的 vxe 单元格类型: {field_type}")
     page.wait_for_timeout(400)
     return colid

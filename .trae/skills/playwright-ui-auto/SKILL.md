@@ -205,6 +205,35 @@ save_screenshot(page, "操作后")
 ```
 截图落在 `picture/screenshots/`，文件名自带时间戳，是排查失败的第一手材料。
 
+### 3.4 日志规范（★ 每次元素操作必须留痕）
+
+日志器：`from utils.log_print import get_logger`，格式自带 `文件名 -> 函数 line:行号`，出错可直接定位文件；输出到控制台 + `logs/YYYY-MM-DD.log`，pytest 会自动把日志挂进 allure 报告的 log 附件。
+
+**公共操作层已内置字段级日志**（`pages/public_operation.py`），每次下拉/输入会自动输出：
+
+```
+下拉选择: [联系人|name=person] 选项='1'
+下拉 [联系人|name=person] 面板已展开
+下拉 [联系人|name=person] 可搜索，已输入过滤关键词'1'
+下拉 [联系人|name=person] 选中'1'成功，当前显示值'1'
+```
+
+字段含义的识别优先级：调用方手动传 `desc=` → 所属 `.el-form-item` 的 label → input 的 `name` → placeholder。**对于没有 name、也不在标准 form-item 里的控件（如 label 锚定的下拉），必须手动传 desc**：
+
+```python
+repetitive_operation(self.page, self.warehouse_select, "江苏银海", desc="仓库/港口码头")
+select_dropdown_option(self.page, self.customer_select, "北大方正", desc="对方实体")
+```
+
+**Page Object 里的按钮/菜单/单选等直接操作也要加一行日志**（页面对象模块顶部 `logger = get_logger()`）：
+
+```python
+logger.info("入库指令: 点击菜单 货权运营 -> 货权指令执行 -> 入库指令")
+self.operation_menu.click()
+```
+
+失败路径必须用 `logger.error`/`logger.warning` 带上下文（字段名 + 面板全部选项/当前值），禁止只抛裸异常。
+
 ## 4. 测试用例编写规范
 
 ### 4.1 文件命名

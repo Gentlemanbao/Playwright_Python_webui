@@ -3,6 +3,8 @@ import re
 import time
 from utils.log_print import get_logger
 
+logger = get_logger()
+
 
 class ApprovalPage():
 
@@ -27,10 +29,13 @@ class ApprovalPage():
 
     def sub_approval(self):
         """提交审批并确认"""
+        logger.info("提交审批: 点击按钮'提交审批'")
         self.submit_approval.first.click()
         self.alert_sub.wait_for(state="visible", timeout=8000)
+        logger.info("提交审批: 点击确认弹窗'确定'按钮")
         self.alert_sub.click()
         time.sleep(2)
+        logger.info("提交审批: 完成")
 
     def get_contract_details(self, contract_code):
         """
@@ -45,22 +50,32 @@ class ApprovalPage():
         time.sleep(2)
         get_logger().info(f"查询合同号：{contract_code}")
         code = str(contract_code)
-        for _ in range(3):
+        for i in range(3):
             self.search_contract.fill(code)
             time.sleep(0.5)
             if self.search_contract.input_value() == code:
+                if i > 0:
+                    logger.info(f"查询合同: 搜索框第{i + 1}次重填后值生效")
                 break
+        else:
+            logger.error(f"查询合同: 搜索框填入'{code}'3次均被清空（tab 重挂载冲突）")
+        logger.info(f"查询合同: 点击按钮'搜索'")
         self.search.click()
         time.sleep(1)
         # 等详情标题出现（h3 变为"合同簿记 <合同号>-<状态>"）
         h3 = self.page.locator("h3").first
-        for _ in range(20):
+        for i in range(20):
             try:
                 if code in h3.inner_text():
+                    if i > 0:
+                        logger.info(f"查询合同: 等待{i * 0.5}秒后详情标题出现")
+                    logger.info(f"查询合同: 详情标题'{h3.inner_text()}'")
                     break
             except Exception:
                 pass
             time.sleep(0.5)
+        else:
+            logger.error(f"查询合同: 20秒内未等到包含'{code}'的详情标题")
 
     def public_approval(self, node_button, conment=None):
         """
@@ -71,8 +86,11 @@ class ApprovalPage():
         否则会命中页面的"审批流程/审批退回/审批撤回"等按钮。
         """
         node_button.click()
+        node_desc = node_button.inner_text().strip()
+        logger.info(f"审批操作: 点击节点按钮'{node_desc}'")
         dialog = self.page.locator(".el-dialog:visible").last
         dialog.wait_for(state="visible", timeout=10000)
+        logger.info(f"审批操作: 弹窗已打开，填写审批意见'{conment}'")
         textarea = dialog.locator("textarea[placeholder='审批意见']").first
         textarea.wait_for(state="visible", timeout=5000)
         textarea.fill(conment or "")
@@ -80,12 +98,14 @@ class ApprovalPage():
         # 等弹窗关闭
         dialog.wait_for(state="hidden", timeout=10000)
         time.sleep(2)
+        logger.info(f"审批操作: 节点'{node_desc}'审批完成，弹窗已关闭")
 
     def approval_process(self, approval_type, contract_code):
         """
         审批流程操作,根据审批类型进行审批操作，分别为合同创建审批补录审批流程，合同创建普通审批流程，买卖交割合同创建审批流程
         """
         self.get_contract_details(contract_code)
+        logger.info(f"审批流程: 开始'{approval_type}'流程，合同号={contract_code}")
         self.sub_approval()
         if approval_type == "补录":
             self.public_approval(self.trader_approval, "业务员审批通过意见")
