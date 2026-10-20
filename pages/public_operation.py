@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/6 17:30
-@Auth ： 章豹
-@File ：public_operation.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/9/16 17:30
+Author: 章豹
+Date: 2026/7/6 17:30
+LastEditors: Do not edit
+LastEditTime: 2026/9/16 17:30
 """
 import time
 
@@ -403,3 +402,26 @@ def vxe_fill_cell(page, table, header_text, value, field_type='combobox'):
         raise ValueError(f"不支持的 vxe 单元格类型: {field_type}")
     page.wait_for_timeout(400)
     return colid
+
+
+def fill_date_picker(page, locator, date_str):
+    """
+    填充 Element Plus el-date-picker 日期选择器。
+    该组件的 input 是 readonly 的，fill() 无法写入，
+    需用 JS 移除 readonly、设置 value 并触发 input/change 事件。
+    :param page: Playwright page 对象
+    :param locator: 日期输入框的 locator（name 属性定位的 input）
+    :param date_str: 要填入的日期字符串，格式 YYYY-MM-DD
+    """
+    desc = _element_desc(locator, manual_desc=None)
+    logger.info(f"日期选择器: [{desc}] 填写'{date_str}'")
+    locator.click(force=True)
+    time.sleep(0.3)
+    locator.evaluate(
+        '(el, val) => { el.removeAttribute("readonly"); const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set; nativeInputValueSetter.call(el, val); el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); }',
+        date_str
+    )
+    time.sleep(0.3)
+    locator.press("Enter")
+    time.sleep(0.3)
+    logger.info(f"日期选择器: [{desc}] 填写完成")

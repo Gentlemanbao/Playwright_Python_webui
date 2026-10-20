@@ -6,7 +6,7 @@ password: gAAAAABqIO1PUwd8bkiGth8S7OL64NlHnD7946XPJxBuwxPhiBI3grntTMvqOiyG3NXwtm
 # 解密公钥
 key: cT17CVJkdkFqT32H74Qk_ly-xEe3DXRZkxRWEx7pjG4=
 # 测试环境地址
-test: 192.168.100.147
+test: 192.168.10.137
 # UAT环境地址
 uat: 192.168.10.134
 product: 192.168.100.31

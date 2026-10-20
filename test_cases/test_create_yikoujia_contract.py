@@ -1,10 +1,10 @@
 '''
 Author: 章豹
-Date: 2026-07-10 17:44:21
+Date: 2026-09-18 09:27:42
 LastEditors: Do not edit
-LastEditTime: 2026-09-17 17:32:20
-FilePath: ui_auto_project/test_cases/test_create_yikoujia_contract.py
+LastEditTime: 2026-10-19 17:54:37
 '''
+# -*- coding: utf-8 -*-
 import pytest
 from playwright.sync_api import expect
 from pages.login_page import LoginPage
@@ -28,13 +28,14 @@ class TestContract():
             create_contract_page = CreateContractPage(page)
             create_contract_page.create_contract()
             locator = page.locator("[name='logicContractCode']")
+            save_screenshot(page, "合同创建")
             expect(locator).not_to_have_value("")
             # Vue 双向绑定只更新 value 属性（property），get_attribute 拿不到，必须用 input_value
             TestContract.contract_code = locator.input_value()  # 使用类属性
             get_logger().info(f"新建合同号：{TestContract.contract_code}")
             save_screenshot(page, "create_contract.png")
 
-        # @pytest.mark.skip(reason="跳过新增合同测试")
+        # @pytest.mark.skip(reason="跳过合同审批测试用例")
         @pytest.mark.run(order=2)
         def test_yikouj_approval(self, page, host):
             """

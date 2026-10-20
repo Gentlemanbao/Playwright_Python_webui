@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/6 17:30
-@Auth ： 章豹
-@File ：test_login.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/7/6 17:30
+Author: 章豹
+Date: 2026/7/6 17:30
+LastEditors: Do not edit
+LastEditTime: 2026/7/6 17:30
 """
 from playwright.sync_api import expect
 from pages.login_page import LoginPage

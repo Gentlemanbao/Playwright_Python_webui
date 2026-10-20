@@ -3,7 +3,6 @@ Author: 章豹
 Date: 2026-07-07 13:10:41
 LastEditors: Do not edit
 LastEditTime: 2026-07-07 14:17:12
-FilePath: test_goods_transfer_In.py
 """
 
 from playwright.sync_api import expect

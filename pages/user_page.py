@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/28 9:40
-@Auth ： 章豹
-@File ：user_page.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/7/28 9:40
+Author: 章豹
+Date: 2026/7/28 9:40
+LastEditors: Do not edit
+LastEditTime: 2026/7/28 9:40
 """
 
 import time

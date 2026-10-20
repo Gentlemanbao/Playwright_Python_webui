@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/6 17:30
-@Auth ： 章豹
-@File ：create_contract_page.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/9/16 17:30
+Author: 章豹
+Date: 2026/7/6 17:30
+LastEditors: Do not edit
+LastEditTime: 2026/9/16 17:30
 """
 import re
 import time
+from datetime import datetime, timedelta
 from utils.log_print import get_logger
 from pages.public_operation import (
     repetitive_operation,
     select_dropdown_option,
     get_vxe_table_by_header,
     vxe_fill_cell,
+    fill_date_picker,
 )
 
 logger = get_logger()
@@ -99,13 +100,16 @@ class CreateContractPage:
         self.baocun = page.locator("button").filter(has_text=re.compile(r"^\s*保存\s*$"))
         self.tijiao = page.locator("button").filter(has_text=re.compile(r"^\s*提交审批\s*$"))
 
-    def basic_information(self):
-        """合同簿记-基础信息"""
-        logger.info("基础信息: 点击菜单 合同管理 -> 合同簿记")
+    def basic_information(self, transaction_type="一口价采购"):
+        """
+        合同簿记-基础信息
+        :param transaction_type: 交易类型，如 '一口价采购' / '一口价销售'
+        """
+        logger.info(f"基础信息: 点击菜单 合同管理 -> 合同簿记（交易类型={transaction_type}）")
         self.contract_management_menu.click()
         self.contract_bookkeeping_menu.click()
         # 先选交易类型，让基础信息表单出现
-        repetitive_operation(self.page, self.transaction_type, "一口价采购")
+        repetitive_operation(self.page, self.transaction_type, transaction_type)
         # 等待基础信息表单渲染
         self.page.wait_for_timeout(1000)
         # 即期/远期 下拉
@@ -131,39 +135,61 @@ class CreateContractPage:
         # 是否补录 下拉
         repetitive_operation(self.page, self.isrecording, "是")
 
-    def delivery_information(self):
-        """合同簿记-交付信息"""
-        repetitive_operation(self.page, self.paymentorder, "先货后款")
-        repetitive_operation(self.page, self.deliverystartdate, "2026-06-01", is_click=True)
-        repetitive_operation(self.page, self.deliveryenddate, "2026-06-09", is_click=True)
+    def delivery_information(self, payment_order="先货后款", start_date=None, end_date=None):
+        """
+        合同簿记-交付信息
+        :param payment_order: 货款顺序，如 '先货后款' / '先款后货'
+        :param start_date: 交付起始日，None 则默认当天
+        :param end_date: 交付截止日，None 则默认当天+7天
+        """
+        if start_date is None:
+            start_date = datetime.now().strftime("%Y-%m-%d")
+        if end_date is None:
+            end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
+        repetitive_operation(self.page, self.paymentorder, payment_order)
+        fill_date_picker(self.page, self.deliverystartdate, start_date)
+        fill_date_picker(self.page, self.deliveryenddate, end_date)
         repetitive_operation(self.page, self.deliverymethod, "货转")
         repetitive_operation(self.page, self.forwardername, "测试公司")
         repetitive_operation(self.page, self.warehousefeeby, "德睿承担")
         repetitive_operation(self.page, self.transferfeebear, "德睿承担")
         repetitive_operation(self.page, self.deliveryfeebear, "德睿承担")
-        repetitive_operation(self.page, self.latestpickupdate, "2026-07-09", is_click=True)
+        fill_date_picker(self.page, self.latestpickupdate, start_date)
 
     def pricing_information(self):
         """合同簿记-点价信息"""
         pass
 
-    def payment_information(self):
-        """合同簿记-付款信息"""
+    def payment_information(self, start_date=None, end_date=None):
+        """
+        合同簿记-付款信息
+        :param start_date: 各类起始日，None 则默认当天
+        :param end_date: 各类截止日，None 则默认当天+7天
+        """
+        if start_date is None:
+            start_date = datetime.now().strftime("%Y-%m-%d")
+        if end_date is None:
+            end_date = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
         repetitive_operation(self.page, self.paymentmethod, "现汇")
-        repetitive_operation(self.page, self.invoicereceiptstartdate, "2026-07-01", is_click=True)
-        repetitive_operation(self.page, self.invoicereceiptenddate, "2026-07-10", is_click=True)
+        fill_date_picker(self.page, self.invoicereceiptstartdate, start_date)
+        fill_date_picker(self.page, self.invoicereceiptenddate, end_date)
         self.invoicemoneyratio.fill("0")
-        repetitive_operation(self.page, self.invoicemoneyratiostartdate, "2026-07-01", is_click=True)
-        repetitive_operation(self.page, self.invoicemoneyratioenddate, "2026-07-10", is_click=True)
+        fill_date_picker(self.page, self.invoicemoneyratiostartdate, start_date)
+        fill_date_picker(self.page, self.invoicemoneyratioenddate, end_date)
         self.checkratio.fill("0")
-        repetitive_operation(self.page, self.checkratiostartdate, "2026-07-01", is_click=True)
-        repetitive_operation(self.page, self.checkratioenddate, "2026-07-10", is_click=True)
+        fill_date_picker(self.page, self.checkratiostartdate, start_date)
+        fill_date_picker(self.page, self.checkratioenddate, end_date)
         self.estimatedamountratio.fill("100")
-        repetitive_operation(self.page, self.estimatedamountratiostartdate, "2026-07-01", is_click=True)
-        repetitive_operation(self.page, self.estimatedamountratioenddate, "2026-07-10", is_click=True)
+        fill_date_picker(self.page, self.estimatedamountratiostartdate, start_date)
+        fill_date_picker(self.page, self.estimatedamountratioenddate, end_date)
 
-    def goods_information(self):
-        """合同簿记-货物信息（vxe-table，点击单元格激活编辑，列虚拟渲染）"""
+    def goods_information(self, production_date=None):
+        """
+        合同簿记-货物信息（vxe-table，点击单元格激活编辑，列虚拟渲染）
+        :param production_date: 生产日期，None 则默认当天
+        """
+        if production_date is None:
+            production_date = datetime.now().strftime("%Y-%m-%d")
         logger.info("货物信息: 点击按钮'新增物资明细'")
         self.add_goods_button.click()
         self.page.wait_for_timeout(1500)
@@ -186,13 +212,18 @@ class CreateContractPage:
         table = get_vxe_table_by_header(self.page)
         vxe_fill_cell(self.page, table, "升贴水 *", "0", field_type='spinbutton')
         table = get_vxe_table_by_header(self.page)
-        vxe_fill_cell(self.page, table, "生产日期", "2026-07-10", field_type='datepicker')
+        vxe_fill_cell(self.page, table, "生产日期", production_date, field_type='datepicker')
         # 注意：原代码的"仓储费起始日"列在表格中不存在（只有"仓储费截止日期"），已移除
 
-    def create_contract(self):
-        """新增合同"""
-        self.basic_information()
-        self.delivery_information()
+    def create_contract(self, transaction_type="一口价采购"):
+        """
+        新增合同
+        :param transaction_type: 交易类型，如 '一口价采购' / '一口价销售'
+        """
+        # 根据交易类型决定货款顺序：采购=先货后款，销售=先款后货
+        payment_order = "先款后货" if transaction_type == "一口价销售" else "先货后款"   
+        self.basic_information(transaction_type)
+        self.delivery_information(payment_order=payment_order)
         self.payment_information()
         self.goods_information()
         logger.info("新增合同: 点击按钮'保存'")

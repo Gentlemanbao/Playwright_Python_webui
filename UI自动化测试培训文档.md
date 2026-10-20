@@ -719,6 +719,81 @@ pip install -r requirements.txt
 
 ---
 
+## 9. 与大圆智能助理协作
+
+### 9.1 大圆能帮你做什么
+
+大圆是你的企业微信专属个人助理，在 UI 自动化测试场景中可以协助你：
+
+- **理解项目结构** — 读取项目文件，快速掌握代码全貌
+- **编写 Page Object** — 根据你提供的截图和字段信息，生成符合规范的页面对象代码
+- **编写测试用例** — 生成 pytest + Playwright 测试用例，遵循现有项目规范
+- **排查问题** — 分析报错日志，定位元素定位、逻辑错误等常见问题
+- **优化代码** — 消除冗余、统一风格、提取公共方法
+
+### 9.2 如何让大圆编写新页面的自动化代码
+
+当需要为一个全新的页面编写 Page Object 和测试用例时，推荐以下流程：
+
+#### 步骤一：提供页面截图
+
+截取目标页面的清晰截图（包含所有需要操作的字段），发送给大圆。
+
+#### 步骤二：导出页面字段信息
+
+登录系统进入目标页面，按 F12 打开开发者工具，切换到 **Console（控制台）** 面板，粘贴以下代码后回车：
+
+```javascript
+console.table([...document.querySelectorAll('input, textarea, .el-select, [role="combobox"]')].map(el => {
+  let name = el.getAttribute('name') || '';
+  let id = el.getAttribute('id') || '';
+  let cls = (el.className || '').slice(0, 60);
+  let placeholder = el.getAttribute('placeholder') || '';
+  let ariaLabel = el.getAttribute('aria-label') || '';
+  // 尝试找前面的 label 文本
+  let label = '';
+  let item = el.closest('.el-form-item');
+  if (item) {
+    let lb = item.querySelector('.el-form-item__label');
+    label = lb ? (lb.textContent || '').trim() : '';
+  }
+  let tag = el.tagName.toLowerCase();
+  return { label, name, id, class: cls, placeholder, ariaLabel, tag };
+}).filter(x => x.name || x.id || x.ariaLabel))
+```
+
+执行后会输出一个表格，包含每个输入控件的以下信息：
+
+| 字段 | 含义 | 对大圆的作用 |
+|------|------|-------------|
+| `label` | 页面上显示的字段标签文字（如"品种""客户名称"） | 确认字段的业务含义 |
+| `name` | HTML name 属性 | **最常用的定位方式**，优先使用 |
+| `id` | HTML id 属性 | 备用定位 |
+| `class` | CSS 类名 | 判断控件类型（下拉框/输入框/日期选择器等） |
+| `placeholder` | 占位提示文本 | 区分日期选择器（含"请选择日期"） |
+| `ariaLabel` | 无障碍标签 | 部分组件用此属性替代 name |
+| `tag` | HTML 标签名 | input / textarea 等 |
+
+> **提示**：如果某些字段没有 `name` 属性，大圆会改用 `id` 或 `ariaLabel` 或 `label` 组合定位，准确率依然很高。
+
+#### 步骤三：将结果发给大圆
+
+将 Console 输出的表格**截图**或**复制文本**发送给大圆，大圆就能基于完整的字段信息生成准确的 Page Object 代码。
+
+#### 步骤四：迭代验证
+
+在 Trae 中运行生成的代码，如果遇到报错，将**报错截图**发回给大圆，大圆会分析原因并修复。
+
+### 9.3 高效协作建议
+
+| 场景 | 提供给大圆的素材 | 产出质量 |
+|------|-----------------|---------|
+| 截图 + Console 导出的完整字段信息 | ✅ 两张图 + 字段表格 | ⭐⭐⭐⭐⭐ 接近100%准确 |
+| 仅截图 | 一张或多张截图 | ⭐⭐⭐⭐ 大部分准确，少数字段需迭代修正 |
+| 仅描述需求 | 文字说明 | ⭐⭐⭐ 框架正确，定位需多次调整 |
+
+---
+
 **文档版本**: v1.0  
 **创建时间**: 2026/7/7  
 **作者**: 章豹

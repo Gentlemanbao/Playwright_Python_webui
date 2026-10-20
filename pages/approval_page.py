@@ -1,10 +1,15 @@
+"""
+Author: 章豹
+Date: 2026/7/6 17:30
+LastEditors: Do not edit
+LastEditTime: 2026/9/16 17:30
+"""
 
 import re
 import time
 from utils.log_print import get_logger
 
 logger = get_logger()
-
 
 class ApprovalPage():
 

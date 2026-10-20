@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/6 17:30
-@Auth ： 章豹
-@File ：login_page.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/9/16 17:10
+Author: 章豹
+Date: 2026/7/6 17:30
+LastEditors: Do not edit
+LastEditTime: 2026/9/16 17:30
 """
+
 
 import os
 from utils.encrypt import decrypt
@@ -19,8 +18,8 @@ class LoginPage:
     def __init__(self, page):
         self.page = page
         # 登录表单元素 (Vue Vben Admin)
-        self.username_input = page.locator("[name='username']")
-        self.password_input = page.locator("[name='password']")
+        self.username_input = page.locator("[id='username']")
+        self.password_input = page.locator("[id='password']")
         # 登录按钮：W-full 宽度100% 是登录按钮独有的 class
         self.login_button = page.locator("button.w-full:has-text('登录')")
         # 配置文件路径

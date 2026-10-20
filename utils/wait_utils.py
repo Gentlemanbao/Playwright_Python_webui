@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-@Time ： 2026/7/29 14:50
-@Auth ： 章豹
-@File ：wait_utils.py
-@IDE ：PyCharm
-@LastEditTime ： 2026/7/29 14:50
+Author: 章豹
+Date: 2026/7/29 14:50
+LastEditors: Do not edit
+LastEditTime: 2026/7/29 14:50
 """
 
 import time
