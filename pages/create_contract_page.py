@@ -197,6 +197,8 @@ class CreateContractPage:
         table = get_vxe_table_by_header(self.page)
         vxe_fill_cell(self.page, table, "仓库名",
                       "上海象屿钢铁供应链有限公司（上海象屿钢铁宝山库）", field_type='combobox')
+        vxe_fill_cell(self.page, table, "未选仓库备注",
+                      "仓库备注测试1", field_type='spinbutton')
         # 选仓库后 存货地址/仓储供应商 联动加载，品名选项依赖仓库，等一会
         self.page.wait_for_timeout(2000)
         table = get_vxe_table_by_header(self.page)

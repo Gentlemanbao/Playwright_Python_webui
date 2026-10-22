@@ -238,6 +238,42 @@ def select_dropdown_option(page, select_locator, text, timeout=8000, desc=None):
     )
 
 
+def clear_el_select(page, select_locator, desc=None):
+    """
+    清空 Element Plus el-select 已选中的值。
+    el-select 内部 .el-select__input 是 readonly 的，fill()/Backspace 都无法删除已选值。
+    正确做法：若组件开启了 clearable，直接用 JS 点击 .el-select__clear 清除按钮；
+    否则回退到聚焦后按 Backspace（不可搜索场景）。
+    :param page: Playwright page 对象
+    :param select_locator: .el-select 组件容器的 locator
+    """
+    desc = _element_desc(select_locator, manual_desc=desc)
+    logger.info(f"清空下拉: [{desc}] 当前值='{_el_select_selected_label(select_locator)}'")
+
+    # 优先用清除按钮（clearable）——用 JS 点击可绕过 hover 才显示的限制
+    cleared = select_locator.evaluate("""el => {
+        const clearBtn = el.querySelector('.el-select__clear, .el-select__suffix .el-icon-circle-close');
+        if (clearBtn) { clearBtn.click(); return true; }
+        return false;
+    }""")
+
+    if not cleared:
+        # 没有 clear 按钮：聚焦后按 Backspace / Delete 兜底
+        select_locator.click()
+        time.sleep(0.3)
+        page.keyboard.press("Backspace")
+        page.wait_for_timeout(300)
+
+    # 校验是否真的清空
+    page.wait_for_timeout(300)
+    label = _el_select_selected_label(select_locator)
+    if label:
+        logger.warning(f"清空下拉: [{desc}] 清空后仍有值 '{label}'，可能清除按钮未触发")
+    else:
+        logger.info(f"清空下拉: [{desc}] 已清空")
+    return label is None or label == ""
+
+
 def repetitive_operation(page, page_obj, input_text=None, is_click=False, desc=None):
     """
     重复操作方法，智能适配普通 input 和 Element Plus Select 组件

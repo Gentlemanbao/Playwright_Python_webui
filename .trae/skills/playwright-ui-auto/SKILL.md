@@ -173,6 +173,16 @@ select_dropdown_option(page, self.customer_select, "北大方正物产集团有�
 - 传入的是 **普通 input** → `click(force) → fill → ArrowDown → Enter`
 - **日期输入框**用 `is_click=True`：`repetitive_operation(page, self.start_date, "2026-06-01", is_click=True)`
 
+#### clear_el_select(page, select_locator, desc=None) —— 清空 el-select 已选值
+
+```python
+from pages.public_operation import clear_el_select
+
+clear_el_select(page, self.warehouse_select, desc="货权池-仓库")
+```
+
+**为什么不能用 fill()/Backspace**：el-select 内部的 `.el-select__input` 是 **readonly** 的，`fill()` 和键盘 Backspace 都无法删除已选值。正确做法是用 JS 点击 `.el-select__clear` 清除按钮（该按钮 hover 才显示，JS click 可绕过）。
+
 #### vxe-table 系列（货物明细表专用，★★ 重要）
 
 货物明细表是 **vxe-table**（不是 el-table），三个特性决定了必须用专用方法：
@@ -337,6 +347,14 @@ class TestXxx:
 | 13 | 文件头 `FilePath: \ui_auto_project\...` | `\u` 触发 SyntaxError，整个文件 0 用例。用正斜杠 |
 | 14 | 选仓库后立刻选品名 | 品名/存货地址等是**联动**加载的，中间要 `wait_for_timeout(2000)` |
 | 15 | 表格列 id 写死（如 `col_110`） | 联动后表格会**重建、列 id 变化**，每次填充前重新 `get_vxe_table_by_header` + `get_vxe_colid` |
+| 16 | **el-select 已选值无法用 fill()/Backspace 清空** | el-select 内部 `.el-select__input` 是 **readonly** 的。必须用 JS 点击 `.el-select__clear` 清除按钮：`select_locator.evaluate("el => el.querySelector('.el-select__clear')?.click()")`。封装在 `pages/public_operation.py` 的 `clear_el_select()` |
+| 17 | **嵌套弹窗定位冲突** | 货权池弹窗嵌套在"采购货物认领"弹窗之上打开，`div.el-dialog:has-text("货权池")` 会匹配到多个。必须用 `self.page.locator('div.el-dialog').last` 定位**最上层**弹窗，按钮定位也要限定在该弹窗内 |
+| 18 | **vxe-table 行选中 JS click 不生效** | 固定列会生成 `.fixed--hidden` 类的**隐藏克隆副本**，且 vxe-table 行选中事件绑定在原生 click 上，JS `.click()` 无法触发。必须用 **Playwright 原生 click** 点击可见的 `tr.vxe-body--row .vxe-cell--checkbox:visible` |
+| 19 | **弹窗内 `button:has-text('确定')` 匹配多个** | 弹窗内可能有多个"确定"按钮（如货权池弹窗 + 采购货物认领弹窗的确定按钮）。必须限定到**弹窗底部 footer 区域**：`dialog.locator(".el-dialog__footer button:has-text('确定')")`，必要时加 `.last` |
+| 20 | **保存后弹窗不自动关闭** | Element Plus 弹窗点"保存"后不会自动关闭，必须再点"确定"按钮才关闭。正确流程：保存 → 等待 → 确定 → 等待弹窗 `state="hidden"` |
+| 21 | **el-overlay 遮罩层拦截 click** | 弹窗内的输入框/按钮可能被 `el-overlay` 遮罩拦截导致 click 超时。用 `click(force=True)` 绕过，或用 JS 直接操作 DOM（设 value + 触发 input/change 事件） |
+| 22 | **成功提示选择器不明确** | 保存成功后页面顶部出现绿色 "ok" 提示（自定义组件），class 可能含 `message/toast/notification/tip`。用 `[class*='message'], [class*='toast'], [class*='notification'], [class*='tip']` + `has_text="ok"` 捕获，且提示可能很快消失，需在弹窗关闭前后都检测 |
+| 23 | **等待元素状态用 visible 超时** | 某些输入框在弹窗内实际不可见（被遮罩），`wait_for(state="visible")` 会超时。改用 `wait_for(state="attached")` 只等 DOM 存在 |
 
 ## 7. 生成代码 Checklist
 
