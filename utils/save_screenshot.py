@@ -22,7 +22,7 @@ def save_screenshot(page, step_name=""):
     step_suffix = f"_{step_name}" if step_name else ""
     screenshot_path = f"picture/screenshots/failure_{timestamp}{step_suffix}.png"
     os.makedirs(os.path.dirname(screenshot_path), exist_ok=True)
-    page.screenshot(path=screenshot_path, full_page=True)
+    page.screenshot(path=screenshot_path, full_page=True, timeout=10000)
     allure.attach.file(
         screenshot_path,
         name=f"截图_{step_name}" if step_name else "截图",

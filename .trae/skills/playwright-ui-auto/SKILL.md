@@ -355,6 +355,7 @@ class TestXxx:
 | 21 | **el-overlay 遮罩层拦截 click** | 弹窗内的输入框/按钮可能被 `el-overlay` 遮罩拦截导致 click 超时。用 `click(force=True)` 绕过，或用 JS 直接操作 DOM（设 value + 触发 input/change 事件） |
 | 22 | **成功提示选择器不明确** | 保存成功后页面顶部出现绿色 "ok" 提示（自定义组件），class 可能含 `message/toast/notification/tip`。用 `[class*='message'], [class*='toast'], [class*='notification'], [class*='tip']` + `has_text="ok"` 捕获，且提示可能很快消失，需在弹窗关闭前后都检测 |
 | 23 | **等待元素状态用 visible 超时** | 某些输入框在弹窗内实际不可见（被遮罩），`wait_for(state="visible")` 会超时。改用 `wait_for(state="attached")` 只等 DOM 存在 |
+| 24 | **`get_vxe_table_by_header` 传不可见表头定位表格** | vxe-table 列虚拟渲染，不可见列的表头 DOM 不存在。`get_vxe_table_by_header(marker_header="配货重量")` 会直接报错"未找到列"。必须传**默认可见区域**的表头（如 `marker_header="账号类型"`）来定位表格，`vxe_fill_cell` 内部自带横向滚动逻辑，会把目标列滚到可见区域再填写 |
 
 ## 7. 生成代码 Checklist
 

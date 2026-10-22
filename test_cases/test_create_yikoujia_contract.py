@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-09-18 09:27:42
 LastEditors: Do not edit
-LastEditTime: 2026-10-22 09:40:11
+LastEditTime: 2026-10-22 11:02:11
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -61,7 +61,8 @@ class TestContract():
         save_screenshot(page, "审批结果")
         assert approval_result, f"审批失败，合同号: {contract_code}，未检测到'审核通过'文本"
 
-    # @pytest.mark.run(order=3)
+    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.run(order=3)
     def test_purchase_claim(self, page, host):
         """
         采购货物认领（衔接在审批之后，业务连贯）
@@ -72,7 +73,7 @@ class TestContract():
 
         contract_code = TestContract.contract_code
         claim_page = PurchaseClaimPage(page)
-        save_success = claim_page.execute_purchase_claim(contract_code='20261021-BDFZ-SFNSB002')
+        save_success = claim_page.execute_purchase_claim(contract_code=contract_code)
 
         save_screenshot(page, "采购货物认领完成")
         get_logger().info("=== 采购货物认领执行完毕 ===")
