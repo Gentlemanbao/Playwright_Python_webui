@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-10-20 14:24:08
 LastEditors: Do not edit
-LastEditTime: 2026-10-22 13:58:50
+LastEditTime: 2026-10-22 16:47:22
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -10,6 +10,7 @@ from playwright.sync_api import expect
 from pages.login_page import LoginPage
 from pages.approval_page import ApprovalPage
 from pages.sale_distribution_page import SaleDistributionPage
+from pages.receipt_claim_page import ReceiptClaimPage
 from utils.save_screenshot import save_screenshot
 from pages.create_contract_page import CreateContractPage
 from utils.log_print import get_logger
@@ -19,7 +20,7 @@ from utils.wait_utils import wait_for_text_change
 class TestSaleContract:
     """一口价销售合同测试"""
     contract_code = None  # 类属性，用于跨测试方法共享数据
-    # @pytest.mark.skip(reason="暂不执行审批，需手动确认审批流程")
+    # @pytest.mark.skip(reason="暂不执行新增销售合同")
     @pytest.mark.run(order=1)
     def test_add_sale_contract(self, page, host):
         """
@@ -67,8 +68,25 @@ class TestSaleContract:
         save_screenshot(page, "销售合同审批结果")
         assert approval_result, f"审批失败，合同号: {contract_code}，未检测到'审核通过'文本"
 
-    # @pytest.mark.skip(reason="暂不执行审批，需手动确认审批流程")
+    # @pytest.mark.skip(reason="暂不执行收款认领")
     @pytest.mark.run(order=3)
+    def test_receipt_claim(self, page, host):
+        """
+        收款认领：审批通过后，对一口价销售合同执行收款认领
+        """
+        get_logger().info("=== 开始执行：收款认领 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestSaleContract.contract_code
+        receipt_claim_page = ReceiptClaimPage(page)
+        result = receipt_claim_page.execute_receipt_claim(contract_code="20261022-BDFZ-SFNSS006")
+
+        assert result is True, "收款认领执行失败"
+        get_logger().info("=== 收款认领执行成功 ===")
+
+    # @pytest.mark.skip(reason="暂不执行销售配货")
+    @pytest.mark.run(order=4)
     def test_sale_distribution(self, page, host):
         """
         销售配货：审批通过后，对一口价销售合同执行销售配货

@@ -223,7 +223,7 @@ class CreateContractPage:
         :param transaction_type: 交易类型，如 '一口价采购' / '一口价销售'
         """
         # 根据交易类型决定货款顺序：采购=先货后款，销售=先款后货
-        payment_order = "先货后款" if transaction_type == "一口价销售" else "先货后款"   
+        payment_order = "先款后货" if transaction_type == "一口价销售" else "先货后款"   
         self.basic_information(transaction_type)
         self.delivery_information(payment_order=payment_order)
         self.payment_information()
