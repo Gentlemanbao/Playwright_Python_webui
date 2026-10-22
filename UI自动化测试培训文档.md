@@ -10,6 +10,8 @@
 6. [用例扩展](#6-用例扩展)
 7. [报告生成](#7-报告生成)
 8. [常见问题](#8-常见问题)
+9. [与大圆智能助理协作](#9-与大圆智能助理协作)
+10. [期现项目前端技术特点与踩坑总结](#10-期现项目前端技术特点与踩坑总结)
 
 ---
 
@@ -794,6 +796,139 @@ console.table([...document.querySelectorAll('input, textarea, .el-select, [role=
 
 ---
 
-**文档版本**: v1.0  
-**创建时间**: 2026/7/7  
-**作者**: 章豹
+
+---
+
+## 10. 期现项目前端技术特点与踩坑总结
+
+> 本章记录在银河德睿期现项目 UI 自动化测试中遇到的典型问题及解决方案，避免后续重复踩坑。
+
+### 10.1 被测系统技术栈
+
+| 技术 | 说明 | 对自动化的影响 |
+|------|------|---------------|
+| **Vue3 + Element Plus** | UI 组件库 | 下拉框是 `el-select`，弹窗是 `el-dialog`，表单是 `el-form` |
+| **Vben Admin** | 后台管理框架 | 菜单是 `.vben-sub-menu` / `.vben-menu-item__content` |
+| **vxe-table** | 高性能表格组件 | 货物明细表专用，支持虚拟渲染、固定列、单元格编辑 |
+
+### 10.2 核心组件特性与自动化策略
+
+#### 10.2.1 el-select 下拉框
+
+**特性**：
+- 内部 `.el-select__input` 是 **readonly** 的
+- 已选值显示在 `.el-select__placeholder` 中
+- 清除按钮 `.el-select__clear` 需 hover 才显示
+- 可搜索组件（filterable）有独立的 `.el-select__input`
+
+**坑点与解决方案**：
+
+| 坑点 | 错误做法 | 正确做法 |
+|------|---------|---------|
+| 清空已选值 | `fill("")` 或 `press("Backspace")` | JS 点击 `.el-select__clear` 按钮 |
+| 选择选项 | `scroll_into_view_if_needed()` + `click()` | JS click 选项（避免页面滚动跳动） |
+| 判断面板展开 | 全局找可见面板 | 用 `aria-expanded` 判断本组件面板 |
+| 多选后面板不关闭 | 认为没选中 | 多选选中后面板保持打开是正常的 |
+
+**通用方法**：`pages/public_operation.py` 中的 `select_dropdown_option()` 和 `clear_el_select()` 已封装上述逻辑。
+
+#### 10.2.2 el-dialog 弹窗
+
+**特性**：
+- 支持嵌套弹窗（弹窗上再开弹窗）
+- 底部按钮在 `.el-dialog__footer` 区域
+- 遮罩层 `el-overlay` 可能拦截点击
+
+**坑点与解决方案**：
+
+| 坑点 | 错误做法 | 正确做法 |
+|------|---------|---------|
+| 嵌套弹窗定位 | `div.el-dialog:has-text("标题")` 可能匹配多个 | `self.page.locator('div.el-dialog').last` 取最上层 |
+| 按钮匹配多个 | `button:has-text('确定')` 全局匹配 | 限定到 `.el-dialog__footer button:has-text('确定')` |
+| 遮罩拦截点击 | `click()` 超时 | `click(force=True)` 或 JS 直接操作 DOM |
+| 保存后弹窗不关闭 | 以为保存后自动关闭 | 保存 → 等待 → 点"确定" → 等待 `state="hidden"` |
+
+#### 10.2.3 vxe-table 表格
+
+**特性**：
+- 表头/数据行/固定列**分属不同 `<table>`**
+- **点击单元格才激活编辑**，编辑控件（el-select/input）动态渲染
+- **列虚拟渲染**，只有可视区列会生成 td
+- 固定列会生成 `.fixed--hidden` 隐藏克隆副本
+
+**坑点与解决方案**：
+
+| 坑点 | 错误做法 | 正确做法 |
+|------|---------|---------|
+| 取表格行 | `table tbody tr:last-child` | 用 `get_vxe_data_row()` 排除合计行 |
+| 填充单元格 | 直接定位 td | 用 `vxe_fill_cell()` 先滚动列再点击激活编辑 |
+| 列 id 写死 | `td[colid='col_110']` | 每次用 `get_vxe_colid()` 重新获取（联动后会变） |
+| 行选中 | JS `.click()` | Playwright 原生 click（JS 无法触发 vxe 事件） |
+
+**通用方法**：`pages/public_operation.py` 中的 `get_vxe_table_by_header()`、`vxe_fill_cell()` 等。
+
+### 10.3 采购货物认领流程踩坑实录
+
+#### 场景：货权池弹窗 + 采购货物认领弹窗
+
+**流程**：结算批次 → 添加数据 → 货权池弹窗（清空仓库→搜索→勾选记录→确定）→ 配货信息（重量/数量/是否补单）→ 保存 → 确定
+
+**踩坑1：仓库下拉框无法清空**
+- **现象**：`fill("")` 和 `press("Backspace")` 都无法清除已选的仓库
+- **根因**：el-select 内部 input 是 readonly
+- **解决**：`clear_el_select(page, select_locator)` → JS 点击 `.el-select__clear`
+
+**踩坑2：货权池弹窗定位冲突**
+- **现象**：`div.el-dialog:has-text("货权池")` 匹配到 2 个元素
+- **根因**：货权池弹窗嵌套在采购货物认领弹窗之上
+- **解决**：`self.page.locator('div.el-dialog').last` 取最上层
+
+**踩坑3：勾选表格记录不生效**
+- **现象**：JS click 复选框后顶部提示"请选择一条数据"
+- **根因**：vxe-table 行选中事件绑定在原生 click 上，JS `.click()` 不触发；且固定列有隐藏克隆副本
+- **解决**：Playwright 原生 click 点击 `tr.vxe-body--row .vxe-cell--checkbox:visible`
+
+**踩坑4：保存后弹窗不关闭**
+- **现象**：点击"保存"后弹窗仍然打开
+- **根因**：Element Plus 弹窗保存后需再点"确定"才关闭
+- **解决**：保存 → `wait_for_timeout(2000)` → 点"确定" → 等待 `state="hidden"`
+
+**踩坑5：确定按钮定位到多个**
+- **现象**：`button:has-text('确定')` 匹配到多个导致点击错误
+- **根因**：货权池弹窗和采购货物认领弹窗都有"确定"按钮
+- **解决**：限定到 `.el-dialog__footer button:has-text('确定')`
+
+**踩坑6：成功提示未检测到**
+- **现象**：保存成功后绿色 "ok" 提示没捕获到
+- **根因**：提示是自定义组件，class 不固定，且可能很快消失
+- **解决**：用 `[class*='message'], [class*='toast'], [class*='notification'], [class*='tip']` + `has_text="ok"`，弹窗关闭前后都检测
+
+### 10.4 断言策略
+
+| 场景 | 断言方式 |
+|------|---------|
+| 保存成功 | 检测成功提示 + 弹窗关闭（`state="hidden"`） |
+| 数据新增 | 表格行数增加或特定文本出现 |
+| 状态变更 | 重新查询后断言状态文本 |
+| 弹窗交互 | 弹窗关闭 + 成功提示 |
+
+**关键原则**：弹窗关闭 = 操作成功的强信号，优先断言弹窗 `state="hidden"`。
+
+### 10.5 通用代码模式
+
+```python
+# 嵌套弹窗定位
+dialog = self.page.locator('div.el-dialog').last
+dialog.wait_for(state="visible", timeout=15000)
+
+# 清空下拉框
+clear_el_select(self.page, select_locator, desc="字段名")
+
+# 弹窗内按钮（限定 footer 避免多匹配）
+dialog.locator(".el-dialog__footer button:has-text('保存')").click()
+self.page.wait_for_timeout(2000)
+dialog.locator(".el-dialog__footer button:has-text('确定')").click()
+
+# 等待弹窗关闭
+dialog.wait_for(state="hidden", timeout=15000)
+```
