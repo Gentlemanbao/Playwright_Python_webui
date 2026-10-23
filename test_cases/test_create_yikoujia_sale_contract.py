@@ -80,7 +80,7 @@ class TestSaleContract:
 
         contract_code = TestSaleContract.contract_code
         receipt_claim_page = ReceiptClaimPage(page)
-        result = receipt_claim_page.execute_receipt_claim(contract_code="20261022-BDFZ-SFNSS006")
+        result = receipt_claim_page.execute_receipt_claim(contract_code)
 
         assert result is True, "收款认领执行失败"
         get_logger().info("=== 收款认领执行成功 ===")
