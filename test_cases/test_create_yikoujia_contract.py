@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-09-18 09:27:42
 LastEditors: Do not edit
-LastEditTime: 2026-10-22 11:02:11
+LastEditTime: 2026-10-23 14:14:46
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -11,6 +11,7 @@ from pages.login_page import LoginPage
 from pages.approval_page import ApprovalPage
 from pages.purchase_claim_page import PurchaseClaimPage
 from pages.payment_request_page import PaymentRequestPage
+from pages.payment_instruction_approval_page import PaymentInstructionApprovalPage
 from utils.save_screenshot import save_screenshot
 from pages.create_contract_page import CreateContractPage
 from utils.log_print import get_logger
@@ -19,7 +20,7 @@ from utils.wait_utils import wait_for_text_change
 
 class TestContract():
     contract_code = None  # 类属性，用于跨测试方法共享数据
-    @pytest.mark.skip(reason="暂不执行新增合同")
+    # @pytest.mark.skip(reason="暂不执行新增合同")
     @pytest.mark.run(order=1)
     def test_add_contract(self, page, host):
         """
@@ -37,7 +38,7 @@ class TestContract():
         get_logger().info(f"新建合同号：{TestContract.contract_code}")
         save_screenshot(page, "create_contract.png")
 
-    @pytest.mark.skip(reason="暂不执行")
+    # @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=2)
     def test_yikouj_approval(self, page, host):
         """
@@ -62,7 +63,7 @@ class TestContract():
         save_screenshot(page, "审批结果")
         assert approval_result, f"审批失败，合同号: {contract_code}，未检测到'审核通过'文本"
 
-    @pytest.mark.skip(reason="暂不执行")
+    # @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=3)
     def test_purchase_claim(self, page, host):
         """
@@ -74,7 +75,7 @@ class TestContract():
 
         contract_code = TestContract.contract_code
         claim_page = PurchaseClaimPage(page)
-        save_success = claim_page.execute_purchase_claim(contract_code=contract_code)
+        save_success = claim_page.execute_purchase_claim(contract_code)
 
         save_screenshot(page, "采购货物认领完成")
         get_logger().info("=== 采购货物认领执行完毕 ===")
@@ -93,7 +94,25 @@ class TestContract():
 
         contract_code = TestContract.contract_code
         payment_page = PaymentRequestPage(page)
-        result = payment_page.execute_payment_request(contract_code='20261021-BDFZ-SFNSB002')
+        result = payment_page.execute_payment_request(contract_code)
 
         assert result is True, "付款申请执行失败"
         get_logger().info("=== 付款申请执行成功 ===")
+
+    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.run(order=5)
+    def test_payment_instruction_approval(self, page, host):
+        """
+        付款指令审批：付款申请后，对生成的指令执行多级审批流程
+        （投资经理→财务资金审核→财务总监→执行→断言已完成）
+        """
+        get_logger().info("=== 开始执行：付款指令审批 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestContract.contract_code
+        approval_page = PaymentInstructionApprovalPage(page)
+        result = approval_page.execute_full_approval(contract_code)
+
+        assert result is True, "付款指令审批执行失败"
+        get_logger().info("=== 付款指令审批执行成功 ===")
