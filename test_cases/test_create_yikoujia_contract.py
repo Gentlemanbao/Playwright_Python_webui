@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-09-18 09:27:42
 LastEditors: Do not edit
-LastEditTime: 2026-10-23 14:14:46
+LastEditTime: 2026-10-26 10:59:36
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -12,14 +12,18 @@ from pages.approval_page import ApprovalPage
 from pages.purchase_claim_page import PurchaseClaimPage
 from pages.payment_request_page import PaymentRequestPage
 from pages.payment_instruction_approval_page import PaymentInstructionApprovalPage
+from pages.receipt_instruction_create_page import ReceiptInstructionCreatePage
 from utils.save_screenshot import save_screenshot
 from pages.create_contract_page import CreateContractPage
+from pages.public_operation import _el_select_selected_label
 from utils.log_print import get_logger
 from utils.wait_utils import wait_for_text_change
 
 
 class TestContract():
     contract_code = None  # 类属性，用于跨测试方法共享数据
+    customer_name = None  # 客户名称，用于后续用例
+
     # @pytest.mark.skip(reason="暂不执行新增合同")
     @pytest.mark.run(order=1)
     def test_add_contract(self, page, host):
@@ -36,6 +40,15 @@ class TestContract():
         # Vue 双向绑定只更新 value 属性（property），get_attribute 拿不到，必须用 input_value
         TestContract.contract_code = locator.input_value()  # 使用类属性
         get_logger().info(f"新建合同号：{TestContract.contract_code}")
+
+        # 客户名称在 el-select 选中后显示在 .el-select__placeholder 中，
+        # [name='customerId'] 存的是客户 ID（数字），不是名称，input_value() 会拿到空/ID
+        customer_select = page.locator("[name='customerId']").first.locator(
+            "xpath=ancestor::div[contains(@class,'el-select') and not(contains(@class,'el-select__'))]"
+        )
+        TestContract.customer_name = _el_select_selected_label(customer_select)
+        get_logger().info(f"客户名称：{TestContract.customer_name}")
+        assert TestContract.customer_name, "客户名称获取为空，后续收票指令用例会失败"
         save_screenshot(page, "create_contract.png")
 
     # @pytest.mark.skip(reason="暂不执行")
@@ -116,3 +129,21 @@ class TestContract():
 
         assert result is True, "付款指令审批执行失败"
         get_logger().info("=== 付款指令审批执行成功 ===")
+
+    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.run(order=6)
+    def test_receipt_instruction_create(self, page, host):
+        """
+        收票指令创建：付款指令审批后，对采购合同创建收票指令
+        """
+        get_logger().info("=== 开始执行：收票指令创建 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestContract.contract_code
+        customer_name = TestContract.customer_name
+        receipt_page = ReceiptInstructionCreatePage(page)
+        result = receipt_page.execute_create_receipt_instruction(contract_code=contract_code, customer_name=customer_name)
+
+        assert result is True, "收票指令创建失败"
+        get_logger().info("=== 收票指令创建执行成功 ===")
