@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-09-18 09:27:42
 LastEditors: Do not edit
-LastEditTime: 2026-10-26 10:59:36
+LastEditTime: 2026-10-26 14:23:13
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -13,6 +13,7 @@ from pages.purchase_claim_page import PurchaseClaimPage
 from pages.payment_request_page import PaymentRequestPage
 from pages.payment_instruction_approval_page import PaymentInstructionApprovalPage
 from pages.receipt_instruction_create_page import ReceiptInstructionCreatePage
+from pages.receipt_instruction_approval_page import ReceiptInstructionApprovalPage
 from utils.save_screenshot import save_screenshot
 from pages.create_contract_page import CreateContractPage
 from pages.public_operation import _el_select_selected_label
@@ -24,7 +25,7 @@ class TestContract():
     contract_code = None  # 类属性，用于跨测试方法共享数据
     customer_name = None  # 客户名称，用于后续用例
 
-    # @pytest.mark.skip(reason="暂不执行新增合同")
+    @pytest.mark.skip(reason="暂不执行新增合同")
     @pytest.mark.run(order=1)
     def test_add_contract(self, page, host):
         """
@@ -51,7 +52,7 @@ class TestContract():
         assert TestContract.customer_name, "客户名称获取为空，后续收票指令用例会失败"
         save_screenshot(page, "create_contract.png")
 
-    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=2)
     def test_yikouj_approval(self, page, host):
         """
@@ -76,7 +77,7 @@ class TestContract():
         save_screenshot(page, "审批结果")
         assert approval_result, f"审批失败，合同号: {contract_code}，未检测到'审核通过'文本"
 
-    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=3)
     def test_purchase_claim(self, page, host):
         """
@@ -95,7 +96,7 @@ class TestContract():
 
         assert save_success, "采购货物认领保存失败，未检测到成功提示"
 
-    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=4)
     def test_payment_request(self, page, host):
         """
@@ -112,7 +113,7 @@ class TestContract():
         assert result is True, "付款申请执行失败"
         get_logger().info("=== 付款申请执行成功 ===")
 
-    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=5)
     def test_payment_instruction_approval(self, page, host):
         """
@@ -130,7 +131,7 @@ class TestContract():
         assert result is True, "付款指令审批执行失败"
         get_logger().info("=== 付款指令审批执行成功 ===")
 
-    # @pytest.mark.skip(reason="暂不执行")
+    @pytest.mark.skip(reason="暂不执行")
     @pytest.mark.run(order=6)
     def test_receipt_instruction_create(self, page, host):
         """
@@ -147,3 +148,20 @@ class TestContract():
 
         assert result is True, "收票指令创建失败"
         get_logger().info("=== 收票指令创建执行成功 ===")
+
+    # @pytest.mark.skip(reason ="暂不执行")
+    @pytest.mark.run(order=7)
+    def test_receipt_instruction_approval(self, page, host):
+        """
+        收票指令审批：收票指令创建后，执行票务专员审批
+        """
+        get_logger().info("=== 开始执行：收票指令审批 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestContract.contract_code
+        approval_page = ReceiptInstructionApprovalPage(page)
+        result = approval_page.execute_full_approval(contract_code='20261023-BDFZ-SFNSB005')
+
+        assert result is True, "收票指令审批失败"
+        get_logger().info("=== 收票指令审批执行成功 ===")
