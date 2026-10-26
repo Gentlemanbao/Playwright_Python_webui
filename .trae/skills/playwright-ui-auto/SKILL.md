@@ -355,7 +355,11 @@ class TestXxx:
 | 21 | **el-overlay 遮罩层拦截 click** | 弹窗内的输入框/按钮可能被 `el-overlay` 遮罩拦截导致 click 超时。用 `click(force=True)` 绕过，或用 JS 直接操作 DOM（设 value + 触发 input/change 事件） |
 | 22 | **成功提示选择器不明确** | 保存成功后页面顶部出现绿色 "ok" 提示（自定义组件），class 可能含 `message/toast/notification/tip`。用 `[class*='message'], [class*='toast'], [class*='notification'], [class*='tip']` + `has_text="ok"` 捕获，且提示可能很快消失，需在弹窗关闭前后都检测 |
 | 23 | **等待元素状态用 visible 超时** | 某些输入框在弹窗内实际不可见（被遮罩），`wait_for(state="visible")` 会超时。改用 `wait_for(state="attached")` 只等 DOM 存在 |
-| 24 | **`get_vxe_table_by_header` 传不可见表头定位表格** | vxe-table 列虚拟渲染，不可见列的表头 DOM 不存在。`get_vxe_table_by_header(marker_header="配货重量")` 会直接报错"未找到列"。必须传**默认可见区域**的表头（如 `marker_header="账号类型"`）来定位表格，`vxe_fill_cell` 内部自带横向滚动逻辑，会把目标列滚到可见区域再填写 |
+| 24 | **XPath 绝对路径 `//` 忽略父 locator 作用域** | `query_dialog.locator("//button[span/text()='查询']")` 中的 `//` 会从 document 根节点开始找，**完全忽略 query_dialog 的作用域限定**，结果点到页面别处的"查询"按钮。必须用**相对路径** `.//button[...]` 或 Playwright 原生 `button:has-text('查询')` |
+| 25 | **vxe-table 合计行不是输入框是纯文本** | `.vxe-table input[role='spinbutton'].first` 只能取第一条明细的值，多条时错误。合计行是 `.vxe-footer--row` 或 `.vxe-body--row__summary` 里的纯文本 `<td>`。用 JS evaluate 按**列头名 → colid → 合计行同 colid 的 td** 提取，去掉千分位逗号 |
+| 26 | **Playwright `.filter(has=...) + .last` 链式 locator 不稳定** | 多弹窗嵌套时，`.el-dialog.filter(has=locator(...)).last.locator(...).filter(...)` 每一层叠加作用域限制都可能失效，任何一层返回 empty 整条链就 timeout。**根本解决方案**：用 JS `document.querySelectorAll('.el-dialog')` 扫描，按特征（label 文本 + 按钮集合）确定弹窗的 nth index，后续统一用 `.locator(".el-dialog").nth(idx)` 操作。`.nth(idx)` 是 Playwright 最稳定的定位方式 |
+| 27 | **JS `element.click()` 不触发 Element Plus 表单 submit** | 采购认领流程里用 Playwright `.click()` 点"搜索"按钮成功，收票指令里换成 JS `b.click()` 点"查询"按钮后表单没提交（表格显示全部数据）。**Element Plus 表单的 submit 事件绑定在原生 click 上**，JS `click()` 虽然触发了 DOM 事件但 Vue 可能没正确响应。**表单提交类按钮一律用 Playwright 原生 `.click()`** |
+| 28 | **查询/筛选操作后必须门控验证结果，不能 WARNING + continue** | 收票指令里查询没生效（WARNING 继续执行），导致勾选了无关合同的数据并提交，造成业务错误。**门控原则**：查询后必须验证目标数据出现在结果中（首行 inner_text 包含 contract_code），否则 `raise RuntimeError` 直接失败，绝不允许静默继续。同时失败时 JS dump 前 5 行到日志方便排查 |
 
 ## 7. 生成代码 Checklist
 
