@@ -2,7 +2,7 @@
 Author: 章豹
 Date: 2026-10-20 14:24:08
 LastEditors: Do not edit
-LastEditTime: 2026-10-22 16:47:22
+LastEditTime: 2026-10-27 14:49:14
 '''
 # -*- coding: utf-8 -*-
 import pytest
@@ -11,6 +11,8 @@ from pages.login_page import LoginPage
 from pages.approval_page import ApprovalPage
 from pages.sale_distribution_page import SaleDistributionPage
 from pages.receipt_claim_page import ReceiptClaimPage
+from pages.sale_invoice_apply_page import SaleInvoiceApplyPage
+from pages.make_invoice_approval_page import MakeInvoiceApprovalPage
 from utils.save_screenshot import save_screenshot
 from pages.create_contract_page import CreateContractPage
 from utils.log_print import get_logger
@@ -101,3 +103,37 @@ class TestSaleContract:
 
         assert result is True, "销售配货执行失败"
         get_logger().info("=== 销售配货执行成功 ===")
+
+    # @pytest.mark.skip(reason="暂不执行销售申请开票")
+    @pytest.mark.run(order=5)
+    def test_sale_invoice_apply(self, page, host):
+        """
+        销售申请开票：销售配货后，对一口价销售合同执行销售申请开票
+        """
+        get_logger().info("=== 开始执行：销售申请开票 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestSaleContract.contract_code
+        invoice_apply_page = SaleInvoiceApplyPage(page)
+        result = invoice_apply_page.execute_full_apply(contract_code)
+
+        assert result is True, "销售申请开票执行失败"
+        get_logger().info("=== 销售申请开票执行成功 ===")
+
+    # @pytest.mark.skip(reason="暂不执行开票指令审批")
+    @pytest.mark.run(order=6)
+    def test_make_invoice_approval(self, page, host):
+        """
+        开票指令审批：销售申请开票后，执行财务初审+匹配库存
+        """
+        get_logger().info("=== 开始执行：开票指令审批 ===")
+        login_page = LoginPage(page)
+        login_page.login(host=host)
+
+        contract_code = TestSaleContract.contract_code
+        approval_page = MakeInvoiceApprovalPage(page)
+        result = approval_page.execute_full_approval(contract_code)
+
+        assert result is True, "开票指令审批失败"
+        get_logger().info("=== 开票指令审批执行成功 ===")

@@ -28,7 +28,7 @@ class ReceiptInstructionApprovalPage:
 
         # ===== 搜索区域（限定在收票面板内） =====
         self.contract_code_input = self.receipt_pane.locator("[name='logicContractCode']")
-        self.search_btn = self.receipt_pane.locator("button").filter(has_text="搜索").first
+        self.search_btn = self.receipt_pane.locator("button").filter(has_text="搜索")
 
     def _execute_step(self, step_name, fn):
         """执行单个步骤，报错时自动截图并抛出"""
